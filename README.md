@@ -201,6 +201,12 @@ node bin/slideforge.js check my.deck.yaml
 powershell -ExecutionPolicy Bypass -File .\scripts\qa-render.ps1 -Pptx out\demo.pptx -Out out\png
 ```
 
+### 持续集成
+
+[.github/workflows/ci.yml](.github/workflows/ci.yml) 在 push 到 `main` 与提 PR 时跑：Node 20 / 22 双版本、`npm ci`、单元测试、两种画布的 `check`、生成 4 个产物并确认非空，最后把 demo 的 PPTX 与 HTML 作为 artifact 上传。
+
+「输出不越界」这个约束因此有了自动化回归门，不必每次靠肉眼复核。
+
 ---
 
 ## 目录结构
@@ -217,6 +223,7 @@ src/template.js        模板配色/字体提取
 src/outline.js         主题 / Markdown → spec 草稿
 scripts/validate.js    版面校验
 scripts/qa-render.ps1  PPTX → PNG 目检
+.github/workflows/ci.yml  CI：测试 + 双画布校验 + 产物构建
 ```
 
 ---

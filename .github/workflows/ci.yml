@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 单元测试
+        run: npm test
+
+      - name: 校验 16:9 demo（越界 / 文字溢出）
+        run: npm run check
+
+      - name: 校验 4:3 demo
+        run: node bin/slideforge.js check examples/demo.deck.yaml --aspect 4:3
+
+      - name: 生成两种比例的 PPTX 与 HTML
+        run: |
+          npm run demo
+          node bin/slideforge.js build examples/demo.deck.yaml --aspect 4:3
+
+      - name: 确认产物非空
+        run: |
+          for f in out/*.pptx out/*.html; do
+            test -s "$f" || { echo "产物为空: $f"; exit 1; }
+            ls -lh "$f"
+          done
+
+      - name: 上传 demo 产物
+        if: matrix.node == '20'
+        uses: actions/upload-artifact@v4
+        with:
+          name: slide-forge-demo
+          path: |
+            out/*.pptx
+            out/*.html
+          if-no-files-found: error
