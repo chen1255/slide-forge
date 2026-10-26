@@ -195,6 +195,61 @@ test('--no-notes 不生成演讲者备注', () => {
   assert.strictEqual(without.slides.length, withNotes.slides.length);
 });
 
+test('Markdown 分页符与指令：--- 切页、layout 指定版式、notes 指定备注', () => {
+  const { fromDocument } = require('../src/outline');
+  const md = [
+    '# 年度报告',
+    '',
+    '## 一、现状',
+    '',
+    '<!-- notes: 开场先讲现状 -->',
+    '',
+    '营收同比增长百分之十二，但毛利率下降了三个百分点，团队判断主要来自渠道折扣。',
+    '',
+    '---',
+    '',
+    '<!-- layout: bullets -->',
+    '',
+    '<!-- notes: 这页讲三个动作 -->',
+    '',
+    '库存周转提升到六次。',
+    '',
+    '履约周期压缩到十二天。',
+    '',
+    '缺货率控制在百分之四以内。',
+  ].join('\n');
+  const raw = fromDocument(md, '年度报告');
+  const pages = raw.slides.filter(
+    (s) => (s.title || '').startsWith('一、现状') && s.layout !== 'section'
+  );
+
+  assert.strictEqual(pages.length, 2, '--- 应把一章切成两页');
+  assert.strictEqual(pages[1].title, '一、现状（续）');
+  assert.ok(pages[0].notes.includes('开场先讲现状'), '第一页备注来自指令');
+  assert.ok(pages[1].notes.includes('这页讲三个动作'), '第二页备注来自指令');
+  // 三句短句自动判断会是 cards，指令强制成 bullets
+  assert.strictEqual(pages[1].layout, 'bullets', 'layout 指令应覆盖形态判断');
+});
+
+test('不支持的 layout 指令被忽略，回落到自动判断', () => {
+  const { fromDocument } = require('../src/outline');
+  const md = [
+    '## 四个动作',
+    '',
+    '<!-- layout: kpi -->',
+    '',
+    '库存周转提升到六次。',
+    '',
+    '履约周期压缩到十二天。',
+    '',
+    '缺货率控制在百分之四以内。',
+  ].join('\n');
+  const raw = fromDocument(md, '测试');
+  const page = raw.slides.find((s) => s.title === '四个动作');
+  assert.ok(page, '应生成内容页');
+  assert.strictEqual(page.layout, 'cards');
+});
+
 test('H3 小节并回上一章，不单独进目录', () => {
   const { fromDocument } = require('../src/outline');
   const md = [
@@ -221,6 +276,28 @@ test('H3 小节并回上一章，不单独进目录', () => {
   const text = JSON.stringify(raw.slides);
   assert.ok(text.includes('华东区域贡献最高'), 'H3 下的正文不能丢');
   assert.ok(!text.includes('分区域表现'), 'H3 标题不再单独成为章节');
+});
+
+test('HTML 带演讲者视图：备注写进 data-notes，可用 ?pr=1 打开', () => {
+  const { normalize } = require('../src/spec');
+  const spec = normalize({
+    meta: { title: '演讲者视图自测' },
+    slides: [
+      { layout: 'bullets', title: '要点', items: ['第一条', '第二条'], notes: '这里的备注要能被看到' },
+      { layout: 'end', title: '谢谢' },
+    ],
+  }, 'inline');
+  const out = path.join(os.tmpdir(), `slide-forge-presenter-${Date.now()}.html`);
+  renderHtml(spec, out);
+  const html = fs.readFileSync(out, 'utf8');
+
+  assert.ok(html.includes('id="presenter"'), '应有演讲者面板');
+  assert.ok(html.includes('id="pv-notes"'), '应有备注区');
+  assert.ok(html.includes('id="pv-timer"'), '应有计时器');
+  assert.ok(html.includes('pr=1'), '链接应能打开演讲者视图');
+  assert.ok(html.includes('data-notes="这里的备注要能被看到"'), '备注应写进 slide 属性');
+  assert.ok(html.includes('id="stagewrap"'), '画布应包在可缩放容器里');
+  fs.unlinkSync(out);
 });
 
 test('PPTX：页数、画布尺寸与文字都落进包里', async () => {

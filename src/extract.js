@@ -249,6 +249,46 @@ const COMPARE_AFTER = /(目标|之后|现在|改革后|改造后|after|新的做
 const PROCESS_WORDS = /(首先|其次|再次|接着|然后|最后|第一步|第二步|第三步|step\s*[1-3])/i;
 const TIME_LIKE = /(20\d{2}|19\d{2}|Q[1-4]|第[一二三四]季度|\d+月)/i;
 
+const PAGE_BREAK = /^\s*-{3,}\s*$/;
+const DIR_LAYOUT = /^<!--\s*layout\s*:\s*([a-z][a-z0-9_-]*)\s*-->$/i;
+const DIR_NOTES = /^<!--\s*notes?\s*:\s*([\s\S]*?)\s*-->$/i;
+
+/**
+ * 按 `---` 把一章正文切成若干页组，并取出作用于该页组的指令：
+ *   <!-- layout: cards -->   指定版式
+ *   <!-- notes: 讲稿 -->     指定备注
+ * 没有指令也没有分页符时，返回单个页组，行为与以前完全一致。
+ */
+function splitPages(body) {
+  const groups = [];
+  let cur = { layout: null, notes: null, lines: [] };
+  String(body || '')
+    .split(/\r?\n/)
+    .forEach((line) => {
+      const t = line.trim();
+      if (PAGE_BREAK.test(t)) {
+        groups.push(cur);
+        cur = { layout: null, notes: null, lines: [] };
+        return;
+      }
+      const lay = DIR_LAYOUT.exec(t);
+      if (lay) {
+        cur.layout = lay[1].toLowerCase();
+        return;
+      }
+      const note = DIR_NOTES.exec(t);
+      if (note) {
+        cur.notes = note[1].replace(/\s+/g, ' ').trim();
+        return;
+      }
+      cur.lines.push(line);
+    });
+  groups.push(cur);
+
+  const kept = groups.filter((g) => g.lines.join('').trim() || g.layout || g.notes);
+  return kept.length ? kept : [{ layout: null, notes: null, lines: [] }];
+}
+
 /** 判断内容形态，决定用哪种版式承载 */
 function detectShape(body) {
   const points = sentences(body);
@@ -273,6 +313,7 @@ module.exports = {
   cleanCell,
   headingOf,
   splitSections,
+  splitPages,
   extractTables,
   sentences,
   trimSentence,

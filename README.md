@@ -217,6 +217,37 @@ slideforge new "供应链数字化改造" --from examples/sample-report.md -o ou
 
 > 这是**规则抽取**，不做语义纠错：口径混杂的句子会被主动放弃出图，图表也只取一个数值列。生成后请按需手工调整。
 
+### 用 Markdown 控制分页与版式
+
+自动拆页之外，可以在原文里直接写指令（写法借鉴 Marp / Slidev）：
+
+| 写法 | 作用 |
+|---|---|
+| `---` 独占一行 | 强制在这里分页，后面的内容进入新的一页 |
+| `<!-- layout: cards -->` | 指定这一页的版式：`bullets` / `cards` / `process` / `timeline` / `compare` |
+| `<!-- notes: 开场先讲结论 -->` | 指定这一页的演讲者备注，替代从原文截取 |
+
+指令作用于它后面的那一页组；写错的版式名会被忽略，回落到自动判断。同上例的三句话本来会被判成 `cards`，加了 `layout: bullets` 就固定成要点页。
+
+```markdown
+## 一、现状
+
+<!-- notes: 开场先讲结论 -->
+
+营收同比增长 12%，但毛利率下降 3 个百分点。
+
+---
+
+<!-- layout: cards -->
+<!-- notes: 这一页讲三个动作 -->
+
+库存周转提升到 6 次。
+履约周期压缩到 12 天。
+缺货率控制在 4% 以内。
+```
+
+除了封面、目录与结尾页，每一页的备注都会写进 PPTX 的 notesSlide，同时写进 HTML 的 `data-notes`。
+
 
 ---
 
@@ -291,6 +322,15 @@ node bin/slideforge.js build examples/demo.deck.yaml --html docs/demo-16x9.html 
 node bin/slideforge.js build examples/demo.deck.yaml --aspect 4:3 --html docs/demo-4x3.html --pptx out/demo-4x3.pptx
 ```
 
+### 演讲者视图
+
+HTML 演示加上 `?pr=1` 就是演讲者视图：[demo-16x9.html?pr=1](https://chen1255.github.io/slide-forge/demo-16x9.html?pr=1)。左侧仍是观众看到的页面（等比缩放），右侧栏显示本页备注、页码、计时器和下一页标题。
+
+- `←` / `→`、`↑` / `↓`、空格翻页，`Home` / `End` 跳到首尾
+- 第一次按键开始计时；`退出` 回到普通视图并停留在当前页（`?p=N`）
+- 备注来自 spec 的 `notes` 字段，`new --from` 的备注与 `<!-- notes: ... -->` 指令也写在这里
+- 直接 `Ctrl+P` 打印时每个 slide 占一页，会自动隐藏右侧栏
+
 ---
 
 ## 已知边界
@@ -312,6 +352,8 @@ node bin/slideforge.js build examples/demo.deck.yaml --aspect 4:3 --html docs/de
 - 16:9 and 4:3 canvases from the same spec (`meta.aspect` or `--aspect 4:3`), with vertical re-flow only
 - Native, editable charts and tables in PPTX; inline SVG charts in HTML
 - `new --from report.md` splits a long Markdown/text report into a full multi-page spec, extracting chart data from pipe tables and numeric sentences
+- Markdown directives survive the split: `---` forces a page break, `<!-- layout: cards -->` picks the layout, `<!-- notes: ... -->` sets the speaker notes
+- HTML decks ship with a presenter view (`?pr=1`): notes, page counter, timer and next-slide hint next to the audience view
 - Brand extraction from `.pptx` / `.potx` (colors, East-Asian fonts, slide size) — layout cloning is out of scope in this version
 - Spec validation for out-of-bounds elements and text overflow before rendering
 

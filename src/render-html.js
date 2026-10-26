@@ -291,15 +291,26 @@ const css = (w, h) => `
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:#11141c;height:100%;}
 body{font-family:'Microsoft YaHei',system-ui,-apple-system,Arial,sans-serif;overflow:hidden;}
+#stagewrap{position:fixed;left:0;top:0;right:0;bottom:28px;overflow:hidden;}
 #stage{position:absolute;left:50%;top:50%;width:${w}px;height:${h}px;transform-origin:center center;}
 .slide{position:absolute;inset:0;overflow:hidden;display:none;}
 .slide.active{display:block;}
 .slide .el{position:absolute;}
 #bar{position:fixed;left:0;right:0;bottom:0;height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#9aa4b8;font-size:12px;background:rgba(0,0,0,.35);}
-#bar button{background:none;border:1px solid #3a4356;color:#9aa4b8;border-radius:4px;cursor:pointer;font-size:12px;padding:2px 8px;}
+#bar button,#bar a{background:none;border:1px solid #3a4356;color:#9aa4b8;border-radius:4px;cursor:pointer;font-size:12px;padding:2px 8px;text-decoration:none;}
+#presenter{display:none;position:fixed;right:0;top:0;bottom:0;width:38%;background:#0d1017;border-left:1px solid #232a3a;color:#d7dcea;padding:22px 24px;flex-direction:column;gap:14px;overflow:hidden;}
+#presenter .head{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:#7f8aa3;}
+#presenter .head a{color:#9aa4b8;text-decoration:none;border-bottom:1px solid #3a4356;}
+#pv-notes{flex:1;overflow:auto;font-size:17px;line-height:1.75;white-space:pre-wrap;}
+#pv-notes.empty{color:#5f6a80;font-style:italic;font-size:14px;}
+#pv-next{font-size:13px;color:#8b96ad;border-top:1px solid #232a3a;padding-top:12px;line-height:1.6;}
+body.presenter #stagewrap{right:38%;bottom:0;}
+body.presenter #bar{display:none;}
+body.presenter #presenter{display:flex;}
 @media print{
   html,body{background:#fff;overflow:visible;height:auto;}
-  #bar{display:none;}
+  #bar,#presenter{display:none!important;}
+  #stagewrap{position:static;overflow:visible;}
   #stage{position:static;transform:none!important;width:${w}px;height:auto;}
   .slide{position:relative;display:block!important;width:${w}px;height:${h}px;page-break-after:always;break-after:page;}
 }
@@ -309,16 +320,40 @@ const js = (w, h) => `
 (function(){
   var slides=[].slice.call(document.querySelectorAll('.slide'));
   var idx=0, counter=document.getElementById('counter');
+  var notes=document.getElementById('pv-notes');
+  var pvCounter=document.getElementById('pv-counter');
+  var nextHint=document.getElementById('pv-next');
+  var timer=document.getElementById('pv-timer');
+  var pr=/[?&]pr=1/.test(location.search);
+  var started=null;
+  function mmss(ms){
+    var t=Math.floor(ms/1000), m=Math.floor(t/60), s=t%60;
+    return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  }
   function show(n){
     idx=(n+slides.length)%slides.length;
     slides.forEach(function(s,i){s.classList.toggle('active',i===idx);});
     counter.textContent=(idx+1)+' / '+slides.length;
+    var pl=document.getElementById('presenter-link');
+    if(pl){pl.href='?pr=1&p='+(idx+1);}
+    var px=document.getElementById('pv-exit');
+    if(px){px.href='?p='+(idx+1);}
+    if(notes){
+      var t=slides[idx].getAttribute('data-notes')||'';
+      notes.textContent=t||'本页没有备注';
+      notes.className=t?'':'empty';
+      pvCounter.textContent=(idx+1)+' / '+slides.length;
+      var nxt=slides[idx+1];
+      nextHint.textContent=nxt?('下一页：'+(nxt.getAttribute('data-title')||'')):'已是最后一页';
+    }
   }
   function fit(){
-    var s=Math.min(window.innerWidth/(${w}+20), (window.innerHeight-30)/(${h}+20));
+    var box=document.getElementById('stagewrap').getBoundingClientRect();
+    var s=Math.min((box.width-20)/${w}, (box.height-20)/${h});
     document.getElementById('stage').style.transform='translate(-50%,-50%) scale('+s+')';
   }
   document.addEventListener('keydown',function(e){
+    if(pr&&!started){started=Date.now();setInterval(function(){timer.textContent=mmss(Date.now()-started);},500);}
     if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();show(idx+1);}
     if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();show(idx-1);}
     if(e.key==='Home'){show(0);}
@@ -328,6 +363,7 @@ const js = (w, h) => `
   document.getElementById('next').onclick=function(){show(idx+1);};
   window.addEventListener('resize',fit);
   var m=location.search.match(/[?&]p=(\\d+)/);
+  if(pr){document.body.classList.add('presenter');}
   show(m?parseInt(m[1],10)-1:0);fit();
 })();
 `;
@@ -341,7 +377,8 @@ function renderHtml(spec, outPath) {
     const scene = LAYOUTS[s.layout](s, theme, geo);
     const bg = scene.background && scene.background.color;
     const body = (scene.elements || []).map((el) => renderElement(el, theme)).join('');
-    return `<section class="slide" style="background:#${bg || theme.palette.bg}">${body}</section>`;
+    const notes = s.notes || s.note || '';
+    return `<section class="slide" data-title="${esc(s.title || '')}" data-notes="${esc(notes)}" style="background:#${bg || theme.palette.bg}">${body}</section>`;
   }).join('\n');
 
   const title = esc(spec.meta.title || '演示文稿');
@@ -354,16 +391,27 @@ function renderHtml(spec, outPath) {
 <style>${css(pxW, pxH)}</style>
 </head>
 <body>
-<div id="stage">
-${slides}
+<div id="stagewrap">
+  <div id="stage">
+  ${slides}
+  </div>
 </div>
 <div id="bar">
   <span>${title} · ${esc(spec.meta.date || '')}</span>
   <span>
+    <a id="presenter-link" href="?pr=1">演讲者视图</a>
     <button id="prev">上一页</button>
     <span id="counter" style="margin:0 10px;"></span>
     <button id="next">下一页</button>
   </span>
+</div>
+<div id="presenter">
+  <div class="head">
+    <span>演讲者视图 · <span id="pv-counter"></span></span>
+    <span><span id="pv-timer">00:00</span> · <a id="pv-exit" href="?p=1">退出</a></span>
+  </div>
+  <div id="pv-notes" class="empty">本页没有备注</div>
+  <div id="pv-next"></div>
 </div>
 <script>${js(pxW, pxH)}</script>
 </body>

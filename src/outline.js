@@ -10,12 +10,16 @@ const yaml = require('js-yaml');
 const { slugify } = require('./spec');
 const {
   splitSections,
+  splitPages,
   keyPoints,
   sentences,
   extractSeries,
   detectShape,
   trimSentence,
 } = require('./extract');
+
+/** 允许用 <!-- layout: x --> 指定的版式（都能直接吃一组要点） */
+const FORCE_SHAPES = new Set(['bullets', 'cards', 'process', 'timeline', 'compare']);
 
 const DEFAULT_API = 'https://api.deepseek.com/chat/completions';
 const DOC_EXT = new Set(['.md', '.markdown', '.txt', '.text']);
@@ -140,11 +144,11 @@ function contentSlides(sec, title, points) {
   }
   if (!rest.length) return slides;
 
-  let shape = detectShape(sec.body).shape;
+  let shape = FORCE_SHAPES.has(sec.force) ? sec.force : detectShape(sec.body).shape;
   // 已有图表时不再把同样的句子改造成时间线或卡片
   if (chartPlaced && (shape === 'timeline' || shape === 'cards')) shape = 'bullets';
 
-  if (shape === 'compare') {
+  if (shape === 'compare' && rest.length >= 2) {
     const idx = rest.findIndex((p) => /(目标|之后|现在|改革后|改造后|after|新的做法)/i.test(p));
     const split = idx > 0 ? idx : Math.ceil(rest.length / 2);
     slides.push({
@@ -281,19 +285,29 @@ function fromDocument(text, topic, opts = {}) {
   let number = 0;
   outline.forEach((sec) => {
     const name = sec.title || '背景';
-    const points = keyPoints(sec.body, 6);
-    const content = contentSlides(sec, name, points);
+    // `---` 手动分页；<!-- layout: x --> 与 <!-- notes: 讲稿 --> 作用于其后的页组
+    const content = [];
+    splitPages(sec.body).forEach((g, gi) => {
+      const body = g.lines.join('\n');
+      const pages = contentSlides(
+        { body, tables: gi === 0 ? sec.tables : [], force: g.layout },
+        gi === 0 ? name : `${name}（续）`,
+        keyPoints(body, 6)
+      );
+      if (!pages.length) return;
+      if (wantNotes) {
+        const note = g.notes || filterNotes(body);
+        if (note) pages[0].notes = note;
+      }
+      content.push(...pages);
+    });
     const needsDivider = content.length >= 2;
 
     if (needsDivider) {
       number += 1;
       slides.push({ layout: 'section', number: String(number).padStart(2, '0'), title: name });
     }
-    content.forEach((s, i) => {
-      // 备注跟着正文走，隔断页不重复同一段讲稿
-      if (wantNotes && i === 0 && sec.body) s.notes = filterNotes(sec.body);
-      slides.push(s);
-    });
+    slides.push(...content);
   });
 
   const end = { layout: 'end', title: '谢谢观看' };
