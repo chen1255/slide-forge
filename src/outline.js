@@ -95,7 +95,8 @@ function contentSlides(sec, title, points) {
   sec.tables.forEach((t, i) => {
     const fit = chartableTable(t);
     const cap = t.caption || (i === 0 ? `${title}数据` : `${title}数据 ${i + 1}`);
-    if (fit && !chartPlaced) {
+    const asChart = !!fit && !chartPlaced;
+    if (asChart) {
       const sum = fit.values.reduce((a, b) => a + b, 0);
       const timeLike = fit.labels.filter((l) => /(年|季度|Q[1-4]|月|(19|20)\d{2})/i.test(l)).length;
       let type = 'bar';
@@ -110,7 +111,9 @@ function contentSlides(sec, title, points) {
       );
       chartPlaced = true;
     }
-    if (!fit || t.rows.length > 6) slides.push(...tableSlides(t, cap, points));
+    // 出不了图的表格一律落到表格页，否则一张表都不剩；
+    // 已出图但行数多时再补一页明细
+    if (!asChart || t.rows.length > 6) slides.push(...tableSlides(t, cap, points));
   });
 
   if (!chartPlaced) {
@@ -215,6 +218,7 @@ function contentSlides(sec, title, points) {
 function fromDocument(text, topic, opts = {}) {
   const sections = splitSections(text);
   if (!sections.length) throw new Error('文档是空的，没有可拆的内容');
+  const wantNotes = opts.notes !== false;
 
   const titleSec = sections.find((s) => s.level === 1 && s.title) || null;
   const title = topic || (titleSec && titleSec.title) || '未命名演示';
@@ -250,12 +254,9 @@ function fromDocument(text, topic, opts = {}) {
       (p) => !subtitle || !p.replace(/[。…]/g, '').startsWith(subtitle.replace(/[。…]/g, '').slice(0, 12))
     );
     if (items.length) {
-      slides.push({
-        layout: 'bullets',
-        title: '背景',
-        items,
-        notes: filterNotes(titleSec.body),
-      });
+      const page = { layout: 'bullets', title: '背景', items };
+      if (wantNotes) page.notes = filterNotes(titleSec.body);
+      slides.push(page);
     }
   }
 
@@ -272,12 +273,14 @@ function fromDocument(text, topic, opts = {}) {
     }
     content.forEach((s, i) => {
       // 备注跟着正文走，隔断页不重复同一段讲稿
-      if (i === 0 && sec.body) s.notes = filterNotes(sec.body);
+      if (wantNotes && i === 0 && sec.body) s.notes = filterNotes(sec.body);
       slides.push(s);
     });
   });
 
-  slides.push({ layout: 'end', title: '谢谢观看', note: '以上内容由原文自动拆页生成，请按需调整。' });
+  const end = { layout: 'end', title: '谢谢观看' };
+  if (wantNotes) end.note = '以上内容由原文自动拆页生成，请按需调整。';
+  slides.push(end);
 
   const cap = Number(opts.slides) || 24;
   const trimmed = trimToCount(slides, cap);

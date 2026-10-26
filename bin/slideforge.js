@@ -26,6 +26,7 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--no-html') args.html = false;
+    else if (a === '--no-notes') args.notes = false;
     else if (a === '--llm') args.llm = true;
     else if (/^-[a-zA-Z]$/.test(a)) {
       const key = a.slice(1);
@@ -95,6 +96,9 @@ async function main() {
       '  template <file>       查看模板的配色、字体与版式',
       '  new "<主题>"          生成 spec 初稿（--llm 用模型写内容）',
       '  new "<主题>" --from   把 Markdown 文档转成 spec',
+      '    --slides N          页数上限（默认 24）',
+      '    --author <名字>      封面署名',
+      '    --no-notes          不生成演讲者备注',
     ].join('\n'));
     return;
   }

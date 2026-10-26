@@ -143,3 +143,39 @@ test('长文档拆页：文档 H1 不进目录，表格与正文各得其所', (
   // 备注跟正文走
   assert.ok(spec.slides.some((s) => s.notes && s.notes.includes('营收')));
 });
+
+test('一章里第二张表不会消失：出不了图的表落到表格页', () => {
+  const { fromDocument } = require('../src/outline');
+  const md = [
+    '| 年份 | 营收（万元） |',
+    '| --- | --- |',
+    '| 2023 | 1240 |',
+    '| 2024 | 1560 |',
+    '| 2025 | 1890 |',
+    '',
+    '| 区域 | 毛利率 |',
+    '| --- | --- |',
+    '| 华东 | 32 |',
+    '| 华南 | 28 |',
+    '| 华北 | 25 |',
+  ].join('\n');
+  const raw = fromDocument(md, '测试');
+  const layouts = raw.slides.map((s) => s.layout);
+  assert.strictEqual(layouts.filter((l) => l === 'chart').length, 1, '只出第一张图');
+  assert.strictEqual(layouts.filter((l) => l === 'table').length, 1, '第二张表要有页面');
+
+  const table = raw.slides.find((s) => s.layout === 'table');
+  assert.deepStrictEqual(table.columns, ['区域', '毛利率']);
+  assert.strictEqual(table.rows.length, 3);
+});
+
+test('--no-notes 不生成演讲者备注', () => {
+  const { fromDocument } = require('../src/outline');
+  const doc = path.join(__dirname, '..', 'examples', 'sample-report.md');
+  const text = fs.readFileSync(doc, 'utf8');
+  const withNotes = fromDocument(text, '供应链数字化改造');
+  const without = fromDocument(text, '供应链数字化改造', { notes: false });
+  assert.ok(withNotes.slides.some((s) => s.notes));
+  assert.ok(without.slides.every((s) => !s.notes && !s.note), '--no-notes 下不应有备注');
+  assert.strictEqual(without.slides.length, withNotes.slides.length);
+});
