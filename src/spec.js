@@ -75,7 +75,8 @@ function normalize(rawIn, sourceName) {
   const geo = geoFor(meta.aspect);
   meta.aspect = geo.aspect;
 
-  const theme = resolveTheme(raw.theme ? { theme: raw.theme } : {});
+  // 必须把 meta 一起传进去，否则 theme.js 里 en-US 自动切 Arial 的分支永远不生效
+  const theme = resolveTheme({ meta, theme: raw.theme });
 
   const out = Object.assign({}, DEFAULTS.output, raw.output || {});
   const base = slugify(meta.title, `deck-${Date.now()}`);

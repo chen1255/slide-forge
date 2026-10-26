@@ -439,3 +439,41 @@ test('多系列折线显式 showValue: true 时仍然标注', async () => {
   assert.match(xml[chartName], /<c:showVal val="1"\/>/);
   fs.unlinkSync(out);
 });
+
+test('en-US 时自动切 Arial，中英文各用各的字体', () => {
+  const { normalize } = require('../src/spec');
+  const en = normalize({ meta: { language: 'en-US' }, slides: [{ layout: 'end' }] }, 'inline');
+  assert.strictEqual(en.theme.fonts.heading, 'Arial');
+  assert.strictEqual(en.theme.fonts.body, 'Arial');
+
+  const zh = normalize({ meta: { language: 'zh-CN' }, slides: [{ layout: 'end' }] }, 'inline');
+  assert.notStrictEqual(zh.theme.fonts.heading, 'Arial');
+});
+
+test('en-US 下显式指定字体时以用户为准，不被 Arial 覆盖', () => {
+  const { normalize } = require('../src/spec');
+  const spec = normalize({
+    meta: { language: 'en-US' },
+    theme: { fonts: { heading: 'Georgia' } },
+    slides: [{ layout: 'end' }],
+  }, 'inline');
+  assert.strictEqual(spec.theme.fonts.heading, 'Georgia');
+  assert.strictEqual(spec.theme.fonts.body, 'Arial');
+});
+
+test('palette 与 sizes 覆盖生效，未覆盖的键保持主题默认', () => {
+  const { normalize } = require('../src/spec');
+  const spec = normalize({
+    meta: { title: '覆盖测试' },
+    theme: {
+      name: 'charcoal-minimal',
+      palette: { accent: 'D2691E' },
+      sizes: { display: 52 },
+    },
+    slides: [{ layout: 'end' }],
+  }, 'inline');
+  assert.strictEqual(spec.theme.palette.accent, 'D2691E');
+  assert.strictEqual(spec.theme.palette.primary, '36454F', '未覆盖的色槽应沿用主题');
+  assert.strictEqual(spec.theme.sizes.display, 52);
+  assert.strictEqual(spec.theme.sizes.body, 14, '未覆盖的字号应沿用阶梯');
+});
