@@ -111,16 +111,50 @@ slides:
 | `build <spec> --aspect 4:3` | 切画布，输出名自动加 `-4x3` |
 | `build <spec> --template x.pptx` | 套模板配色与中文字体 |
 | `build <spec> --pptx a.pptx --html b.html` | 指定产物路径 |
-| `check <spec>` | 只校验不生成，越界与溢出问题在此暴露 |
+| `check <spec>` | 只校验不生成：越界、溢出、**配色对比度**在此暴露 |
+| `check <spec> --contrast` | 额外打印 11 组前景/背景的对比度明细 |
+| `svg <spec> [--out 目录]` | 每页导一张独立 `.svg`，不依赖 PowerPoint |
+| `doctor [spec]` | 体检：Node 版本、依赖、字体是否已装、能否导 PNG |
+| `profile list` | 看已保存的品牌 profile |
+| `profile save <名字> --template 品牌.pptx` | 把公司模板的配色字体存成可复用名字 |
+| `profile save <名字> --from spec.yaml` | 把某个 spec 的 theme 存成 profile |
+| `profile show / rm <名字>` | 看色值明细 / 删除 |
 | `new "<主题>"` | 出可编辑 spec 骨架，`--llm` 调模型写大纲 |
 | `new "<主题>" --from doc.md` | Markdown 拆页，`--slides N` 限页数，`--no-notes` 关备注 |
 | `themes` / `template <file>` | 列主题 / 读模板配色字体尺寸 |
 
 `--llm` 读环境变量 `DEEPSEEK_API_KEY`，未设置时自动回落本地骨架，不中断。
 
+## 品牌色与可读性
+
+**用户给了公司模板或固定品牌色时，先存 profile，不要每次贴 11 个色值：**
+
+```bash
+slideforge profile save 客户A --template 客户A品牌.pptx   # 从模板提取
+slideforge profile save 客户A --from 上一版.yaml          # 从已有 spec 提取
+```
+
+之后 spec 里写 `theme: 客户A` 就够了，跨会话有效（存在 `~/.slideforge/profiles/`）。
+
+**`check` 会算 WCAG 对比度**，覆盖 11 组实际出现的前景/背景配对。低于 3:1 判为不可读直接报错，3:1 到 4.5:1 之间提示微调。用户自己填的 palette 出现对比度报错时，**不要直接忽略，也不要自己悄悄换色**——把报错的色值和比值告诉他，让他决定是调深还是坚持品牌色。
+
+## 出图的三条路
+
+PPTX 里的图表是 OOXML 原生对象，轻量预览器不渲染，用户容易误以为「图掉了」。交付时按场景给路径：
+
+| 需求 | 用法 | 依赖 |
+|---|---|---|
+| 要能改数据 | PPTX | PowerPoint / WPS |
+| 只是看/发人 | HTML，任何浏览器都能开 | 无 |
+| 要放进文档、要矢量缩放 | `slideforge svg <spec>`，一页一个 `.svg` | 无 |
+| 要位图 | `scripts/qa-render.ps1` 导 PNG | 需本机 PowerPoint |
+
+先用 `doctor` 确认本机有没有 PowerPoint，没有就别承诺 PNG，改给 SVG 或 HTML。
+
 ## 硬规则
 
-- 颜色写 6 位十六进制且**不带 `#`**。
+- 颜色写 6 位十六进制且**不带 `#`**（带 `#` 会被自动去掉，但不该依赖这个宽容）。
+- **配色要过对比度**：`check` 会对正文/标题/卡片/深色页/表头共 11 组配对算 WCAG 比值。低于 3:1 直接失败——这种页面在实际投影上根本看不清，不能交付。
 - `chart.series[i].values` 的长度必须等于 `chart.labels` 的长度，否则 spec 校验直接失败。
 - `chart.type` 只认 8 个值（`bar` `column` `line` `pie` `doughnut` `area` `scatter` `radar`），缺省为 `bar`；写 `funnel` 之类会报错并列出可用类型。用户要漏斗图、甘特图这类没有的形状时，**主动告知改用 `bar` 或 `process` 近似表达**，不要指望它兜住。
 - **多系列折线图默认不显示逐点数值**（两条线数值接近时标签会重叠），需要时显式写 `chart.showValue: true`。
@@ -140,6 +174,8 @@ slides:
 | `缺少必填字段` | 该版式的必需键缺失 | 对照 `references/layouts.md` 的必填列补齐 |
 | `values 数量与 labels 不一致` | 图表数据行对不齐 | 逐条 series 补齐或截断到 labels 长度 |
 | `第 N 行有 M 列` | 表格行列数不匹配 | 补空串或调整表头 |
+| `对比度 X.XX:1，低于 Y:1` | 这组前景/背景太接近 | 调深前景或调浅背景；品牌色不能动就把该颜色只用于色块，不要用于文字 |
+| `未知主题 "xxx"` | 既不是内置主题也不是已存 profile | `themes` 看内置，`profile list` 看已存，或直接写 palette |
 | `check` 报越界 | 内容超出画布 | 拆页、减条目，或换 4:3 画布 |
 | 中文变方块/回退字体 | 本机缺字体 | HTML 依赖本机字体，PPTX 指定 `微软雅黑` 等已装字体 |
 | 改了 `fonts` 但没变化 | 字体名本机不存在，静默回退 | 先用 `fc-list` 或字体目录确认精确家族名，再填 `fonts` |

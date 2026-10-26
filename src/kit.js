@@ -149,6 +149,6 @@ function columns(x, y, w, h, count, gap) {
 
 module.exports = {
   ASPECTS, W, H, M, geoFor, slack, dy,
-  measure, lineCount, fits, fitFont,
+  measure, lineCount, fits, fitFont, tokenize, charEm,
   text, list, rect, line, image, imagePlaceholder, columns,
 };

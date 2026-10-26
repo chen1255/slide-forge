@@ -34,6 +34,19 @@ jobs:
       - name: 校验 4:3 demo
         run: node bin/slideforge.js check examples/demo.deck.yaml --aspect 4:3
 
+      - name: 校验配色对比度明细
+        run: node bin/slideforge.js check examples/demo.deck.yaml --contrast
+
+      - name: 导出 SVG 并确认每页都有
+        run: |
+          node bin/slideforge.js svg examples/demo.deck.yaml --out out/svg
+          n=$(ls out/svg/*.svg | wc -l)
+          test "$n" -eq 19 || { echo "SVG 页数应为 19，实际 $n"; exit 1; }
+          grep -q 'role="img"' out/svg/*.svg || { echo "SVG 缺少可访问性标注"; exit 1; }
+
+      - name: 环境体检（只验证命令可运行，runner 未必装了中文字体）
+        run: node bin/slideforge.js doctor examples/demo.deck.yaml || true
+
       - name: 生成两种比例的 PPTX 与 HTML
         run: |
           npm run demo

@@ -106,7 +106,14 @@ powershell -c "Expand-Archive dist/slide-forge.zip -DestinationPath $env:USERPRO
 | `slideforge build <spec>` | 生成 PPTX + HTML；`--no-html` 只出 PPTX |
 | `slideforge build <spec> --aspect 4:3` | 改画布比例（`16:9` 默认 / `4:3`），输出文件名自动加 `-4x3` |
 | `slideforge build <spec> --template brand.pptx` | 套用模板的品牌色与字体 |
-| `slideforge check <spec>` | 校验 spec 与版面（越界、文字溢出），不生成文件 |
+| `slideforge check <spec>` | 校验 spec 与版面（越界、文字溢出、配色对比度），不生成文件 |
+| `slideforge check <spec> --contrast` | 额外打印 11 组前景/背景的 WCAG 对比度明细 |
+| `slideforge svg <spec>` | 每页导出一张独立 `.svg`，矢量、不依赖 PowerPoint |
+| `slideforge doctor [spec]` | 体检环境：Node、依赖、字体是否已装、能否导 PNG |
+| `slideforge profile list` | 查看已保存的品牌 profile |
+| `slideforge profile save <名> --template x.pptx` | 把模板配色字体存成可复用的名字 |
+| `slideforge profile save <名> --from spec.yaml` | 把某份 spec 的 theme 存成 profile |
+| `slideforge profile show\|rm <名>` | 查看色值明细 / 删除 |
 | `slideforge themes` | 列出内置主题 |
 | `slideforge template <file>` | 查看模板的配色、字体、尺寸与版式 |
 | `slideforge new "<主题>"` | 生成可编辑的 spec 骨架 |

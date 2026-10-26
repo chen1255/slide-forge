@@ -1,10 +1,12 @@
 {
   "name": "slide-forge",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Generate editable PPTX and self-contained HTML decks from a single YAML spec",
   "type": "commonjs",
   "main": "src/index.js",
-  "bin": { "slideforge": "bin/slideforge.js" },
+  "bin": {
+    "slideforge": "bin/slideforge.js"
+  },
   "scripts": {
     "demo": "node bin/slideforge.js build examples/demo.deck.yaml",
     "check": "node bin/slideforge.js check examples/demo.deck.yaml",
@@ -12,15 +14,26 @@
     "qa": "node scripts/validate.js examples/demo.deck.yaml",
     "pack:skill": "node scripts/pack-skill.js"
   },
-  "keywords": ["pptx", "powerpoint", "presentation", "slides", "pptxgenjs", "html-deck"],
+  "keywords": [
+    "pptx",
+    "powerpoint",
+    "presentation",
+    "slides",
+    "pptxgenjs",
+    "html-deck"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chen1255/slide-forge.git"
   },
   "homepage": "https://github.com/chen1255/slide-forge#readme",
-  "bugs": { "url": "https://github.com/chen1255/slide-forge/issues" },
-  "engines": { "node": ">=20" },
+  "bugs": {
+    "url": "https://github.com/chen1255/slide-forge/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "files": [
     "bin/",
     "src/",

@@ -32,12 +32,22 @@ theme:
   name: forest-moss
 theme:
   name: forest-moss
-  palette: { accent: "D9A441" }
+  palette: { accent: "B0861F" }
   fonts: { heading: 思源黑体, body: 思源宋体 }
   sizes: { title: 32, body: 13 }
 ```
 
 内置四套：`midnight-executive`（午夜高管）、`forest-moss`（森林苔藓）、`coral-energy`（珊瑚活力）、`charcoal-minimal`（炭灰极简）。
+
+`name` 除了内置主题，还可以写**已保存的 profile 名**（`~/.slideforge/profiles/*.json`）。解析顺序是先查内置主题，查不到再查 profile；两者都没有才报错，报错信息里会列出可用的 profile。
+
+```bash
+slideforge profile save 客户A --template 客户A品牌.pptx   # 从模板提取配色字体
+slideforge profile save 客户A --from 上一版.yaml          # 从已有 spec 提取
+slideforge profile list                                   # 看已存的
+```
+
+profile 只存差异，缺的色槽回落到默认主题，老 profile 不会因为新增色槽而崩。
 
 `palette` 可覆盖的键，全部为 6 位十六进制、**不带 `#`**：
 

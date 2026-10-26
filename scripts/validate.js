@@ -6,6 +6,7 @@ const path = require('path');
 const { lineCount } = require('../src/kit');
 const { LAYOUTS } = require('../src/layouts');
 const { loadSpec } = require('../src/spec');
+const { checkPalette, formatTable } = require('../src/contrast');
 
 const TOL = 0.02;
 
@@ -48,18 +49,27 @@ function validateSpecFile(file, opts = {}) {
     });
   });
 
-  return { spec, errors, warnings };
+  // 配色可读性：palette 允许任意覆盖，浅字配浅底不会有任何报错，只能靠算
+  const contrast = checkPalette(spec.theme.palette);
+  contrast.errors.forEach((e) => errors.push(e));
+  contrast.warnings.forEach((w) => warnings.push(w));
+
+  return { spec, errors, warnings, contrast };
 }
 
 if (require.main === module) {
   const file = process.argv[2] || path.join(__dirname, '..', 'examples', 'demo.deck.yaml');
   const i = process.argv.indexOf('--aspect');
   const aspect = i > 0 ? process.argv[i + 1] : null;
-  const { spec, errors, warnings } = validateSpecFile(file, { aspect });
+  const verbose = process.argv.includes('--contrast');
+  const { spec, errors, warnings, contrast } = validateSpecFile(file, { aspect });
   console.log(`检查 ${spec.slides.length} 页，画布 ${spec.geo.W} × ${spec.geo.H} in（${spec.meta.aspect}）`);
+  if (verbose) console.log(formatTable(contrast.table));
   warnings.forEach((w) => console.log(`  ! ${w}`));
   errors.forEach((e) => console.log(`  x ${e}`));
-  if (!errors.length && !warnings.length) console.log('  全部通过');
+  if (!errors.length && !warnings.length) {
+    console.log(`  全部通过，配色对比度 ${contrast.table.length} 项达标`);
+  }
   if (errors.length) process.exit(1);
 }
 

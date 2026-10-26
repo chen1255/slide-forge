@@ -477,3 +477,114 @@ test('palette 与 sizes 覆盖生效，未覆盖的键保持主题默认', () =>
   assert.strictEqual(spec.theme.sizes.display, 52);
   assert.strictEqual(spec.theme.sizes.body, 14, '未覆盖的字号应沿用阶梯');
 });
+
+// ---------- 对比度 ----------
+
+test('WCAG 对比度：黑白为 21:1，同色为 1:1', () => {
+  const { ratio } = require('../src/contrast');
+  assert.strictEqual(Math.round(ratio('000000', 'FFFFFF')), 21);
+  assert.strictEqual(ratio('1E2761', '1E2761'), 1);
+});
+
+test('内置四套主题的配色全部达标', () => {
+  const { THEMES } = require('../src/theme');
+  const { checkPalette } = require('../src/contrast');
+  Object.entries(THEMES).forEach(([name, t]) => {
+    const r = checkPalette(t.palette);
+    assert.deepStrictEqual(r.errors, [], `${name} 有对比度错误`);
+  });
+});
+
+test('浅色字配白底会被 checkPalette 判为错误', () => {
+  const { checkPalette } = require('../src/contrast');
+  const base = require('../src/theme').THEMES['midnight-executive'].palette;
+  const r = checkPalette(Object.assign({}, base, { text: 'E8E8E8', bg: 'FFFFFF' }));
+  assert.ok(r.errors.length > 0, '应报不可读');
+  assert.match(r.errors[0], /对比度/);
+});
+
+test('色值容错：带 # 能自动去掉，长度不对则报非法', () => {
+  const { checkPalette, ratio } = require('../src/contrast');
+  // 用户常误写 # 前缀，这种宽容处理不掉分
+  assert.ok(Math.abs(ratio('#000000', 'FFFFFF') - ratio('000000', 'FFFFFF')) < 1e-9);
+  const base = require('../src/theme').THEMES['midnight-executive'].palette;
+  const r = checkPalette(Object.assign({}, base, { accent: 'E8B0' }));
+  assert.ok(r.errors.some((e) => e.includes('颜色值非法')), '4 位十六进制应被判非法');
+});
+
+// ---------- profile ----------
+
+test('profile 能保存并作为 theme 使用，颜色真的生效', () => {
+  const os2 = require('os');
+  const tmp = fs.mkdtempSync(path.join(os2.tmpdir(), 'sf-prof-'));
+  const old = process.env.SLIDEFORGE_HOME;
+  process.env.SLIDEFORGE_HOME = tmp;
+  try {
+    const { saveProfile, getProfile, listProfiles } = require('../src/profile');
+    saveProfile('测试品牌', { palette: { primary: '123456', accent: '654321' }, fonts: { body: 'Arial' } });
+    assert.strictEqual(getProfile('测试品牌').palette.primary, '123456');
+    assert.ok(listProfiles().some((p) => p.name === '测试品牌'));
+
+    const { normalize } = require('../src/spec');
+    const spec = normalize({ theme: '测试品牌', slides: [{ layout: 'end' }] }, 'inline');
+    assert.strictEqual(spec.theme.palette.primary, '123456');
+    assert.strictEqual(spec.theme.fromProfile, true);
+    // profile 没给的色槽回落到默认主题，不能变成 undefined
+    assert.ok(spec.theme.palette.bg, '缺省色槽应回落');
+  } finally {
+    if (old === undefined) delete process.env.SLIDEFORGE_HOME;
+    else process.env.SLIDEFORGE_HOME = old;
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('profile 名挡住路径穿越', () => {
+  const { assertName } = require('../src/profile');
+  assert.throws(() => assertName('../../etc/passwd'), /名称/);
+  assert.throws(() => assertName('a/b'), /名称/);
+  assert.strictEqual(assertName('客户A'), '客户A');
+});
+
+// ---------- SVG ----------
+
+test('SVG 断行不会把中文切成半个字', () => {
+  const { wrapText } = require('../src/render-svg');
+  const lines = wrapText('这是一段需要换行的中文文字用来测试断行是否正确', 14, 1.2);
+  assert.ok(lines.length > 1, '应该换行');
+  lines.forEach((l) => assert.ok(l.length > 0, '不应出现空行'));
+  assert.strictEqual(lines.join(''), '这是一段需要换行的中文文字用来测试断行是否正确');
+});
+
+test('SVG 输出带 title/desc 与 role=img，且包含正文文字', () => {
+  const { sceneToSvg } = require('../src/render-svg');
+  const { normalize } = require('../src/spec');
+  const { LAYOUTS } = require('../src/layouts');
+  const spec = normalize({
+    meta: { title: '可访问性' },
+    slides: [{ layout: 'bullets', title: '标题在此', items: ['要点一'] }],
+  }, 'inline');
+  const s = spec.slides[0];
+  const scene = LAYOUTS[s.layout](s, Object.assign({}, spec.theme, { meta: spec.meta }), spec.geo);
+  const svg = sceneToSvg(scene, spec.theme, spec.geo, '可访问性 · 标题在此', { index: 1, total: 1 });
+  assert.match(svg, /role="img"/);
+  assert.match(svg, /<title id="sf-1-title">/);
+  assert.match(svg, /<desc id="sf-1-desc">/);
+  assert.match(svg, /aria-labelledby="sf-1-title sf-1-desc"/);
+  assert.ok(svg.includes('标题在此'), '标题文字应出现在 svg 里');
+  assert.ok(svg.includes('要点一'), '列表项应出现在 svg 里');
+});
+
+test('表格在 SVG 里按真实列宽与行高绘制，不再用不存在的 h', () => {
+  const { sceneToSvg } = require('../src/render-svg');
+  const { normalize } = require('../src/spec');
+  const { LAYOUTS } = require('../src/layouts');
+  const spec = normalize({
+    meta: { title: '表格' },
+    slides: [{ layout: 'table', title: '数据', columns: ['A', 'B'], rows: [['1', '2'], ['3', '4']] }],
+  }, 'inline');
+  const s = spec.slides[0];
+  const scene = LAYOUTS[s.layout](s, Object.assign({}, spec.theme, { meta: spec.meta }), spec.geo);
+  const svg = sceneToSvg(scene, spec.theme, spec.geo, '表格', { index: 1, total: 1 });
+  assert.ok(!/NaN/.test(svg), '不应出现 NaN 坐标');
+  assert.ok(svg.includes('A') && svg.includes('4'));
+});

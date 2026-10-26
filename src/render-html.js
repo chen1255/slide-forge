@@ -373,12 +373,13 @@ function renderHtml(spec, outPath) {
   const geo = spec.geo || geoFor(spec.meta.aspect);
   const pxW = Math.round(geo.W * PX);
   const pxH = Math.round(geo.H * PX);
-  const slides = spec.slides.map((s) => {
+  const slides = spec.slides.map((s, i) => {
     const scene = LAYOUTS[s.layout](s, theme, geo);
     const bg = scene.background && scene.background.color;
     const body = (scene.elements || []).map((el) => renderElement(el, theme)).join('');
     const notes = s.notes || s.note || '';
-    return `<section class="slide" data-title="${esc(s.title || '')}" data-notes="${esc(notes)}" style="background:#${bg || theme.palette.bg}">${body}</section>`;
+    const label = esc([`第 ${i + 1} 页`, s.title || ''].filter(Boolean).join('：'));
+    return `<section class="slide" role="group" aria-label="${label}" data-title="${esc(s.title || '')}" data-notes="${esc(notes)}" style="background:#${bg || theme.palette.bg}">${body}</section>`;
   }).join('\n');
 
   const title = esc(spec.meta.title || '演示文稿');
@@ -423,4 +424,5 @@ function renderHtml(spec, outPath) {
   return outPath;
 }
 
-module.exports = { renderHtml };
+// 图表 SVG 片段单独导出，供 render-svg.js 复用，保证两种输出的图形完全一致
+module.exports = { renderHtml, barSvg, lineSvg, pieSvg, spreadSvg, chartEl, esc, PX, PT, cssFontStack: fontStack };
