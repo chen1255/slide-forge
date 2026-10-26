@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>slide-forge · 在线演示</title>
+<style>
+  :root { --ink:#1E2761; --gold:#C9A227; --bg:#F6F7FB; --muted:#5B6472; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; background:var(--bg); color:var(--ink); }
+  header { background:var(--ink); color:#fff; padding:56px 24px 48px; text-align:center; }
+  header h1 { margin:0 0 10px; font-size:36px; letter-spacing:.04em; }
+  header p { margin:0; color:#C9CFE4; font-size:15px; }
+  header .bar { width:56px; height:3px; background:var(--gold); margin:20px auto 0; }
+  main { max-width:960px; margin:0 auto; padding:40px 24px 64px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; }
+  a.card { display:block; background:#fff; border-radius:10px; overflow:hidden; text-decoration:none; color:inherit;
+           box-shadow:0 2px 10px rgba(30,39,97,.08); transition:transform .15s, box-shadow .15s; }
+  a.card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(30,39,97,.16); }
+  a.card img { display:block; width:100%; height:auto; }
+  .meta { padding:16px 18px 20px; }
+  .meta h2 { margin:0 0 6px; font-size:17px; }
+  .meta span { color:var(--muted); font-size:13px; }
+  footer { text-align:center; color:var(--muted); font-size:13px; padding:0 24px 48px; }
+  footer a { color:var(--ink); }
+</style>
+</head>
+<body>
+<header>
+  <h1>slide-forge</h1>
+  <p>一份 YAML spec，同时生成可编辑 PPTX 与单文件 HTML 演示</p>
+  <div class="bar"></div>
+</header>
+<main>
+  <div class="cards">
+    <a class="card" href="demo-16x9.html">
+      <img src="images/chart.png" alt="16:9 演示截图">
+      <div class="meta"><h2>16:9 演示（19 页）</h2><span>方向键翻页 · 支持 ?p=8 深链</span></div>
+    </a>
+    <a class="card" href="demo-4x3.html">
+      <img src="images/chart-4x3.png" alt="4:3 演示截图">
+      <div class="meta"><h2>4:3 演示（19 页）</h2><span>同一份 spec，仅纵向重排</span></div>
+    </a>
+  </div>
+</main>
+<footer>
+  源码：<a href="https://github.com/chen1255/slide-forge">github.com/chen1255/slide-forge</a>
+</footer>
+</body>
+</html>

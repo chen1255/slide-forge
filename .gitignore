@@ -7,3 +7,7 @@ out/
 *.png
 !examples/preview.png
 .DS_Store
+
+# GitHub Pages 直接发布 docs/，构建产物与截图需要入库
+!docs/*.html
+!docs/images/*.png

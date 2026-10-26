@@ -1,5 +1,8 @@
 # slide-forge · 幻灯片工坊
 
+[![CI](https://github.com/chen1255/slide-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/chen1255/slide-forge/actions/workflows/ci.yml)
+[![在线演示](https://img.shields.io/badge/demo-online-1E2761)](https://chen1255.github.io/slide-forge/)
+
 一份 YAML，同时产出**可编辑的 .pptx** 和**单文件 HTML 演示**。
 
 面向中文汇报场景：18 个内置版式、自动测量文字宽度并按框缩字号、生成前做越界与溢出校验。
@@ -10,7 +13,15 @@ slideforge build examples/demo.deck.yaml
 # HTML → out/2026-Q3-经营复盘.html
 ```
 
-![demo](examples/preview.png)
+👉 **[在线演示](https://chen1255.github.io/slide-forge/)**（16:9 与 4:3 两个版本，方向键翻页）
+
+| 封面 | KPI |
+|---|---|
+| ![封面](docs/images/cover.png) | ![KPI](docs/images/kpi.png) |
+
+| 图表 + 解读 | 流程页 |
+|---|---|
+| ![图表](docs/images/chart.png) | ![流程](docs/images/process.png) |
 
 ---
 
@@ -268,6 +279,16 @@ src/extract.js         文档结构化抽取（切章、表格、数值序列、
 scripts/validate.js    版面校验
 scripts/qa-render.ps1  PPTX → PNG 目检
 .github/workflows/ci.yml  CI：测试 + 双画布校验 + 产物构建
+docs/                  在线演示（GitHub Pages）：demo-16x9.html / demo-4x3.html / 截图
+```
+
+### 在线演示
+
+`docs/` 目录直接由 GitHub Pages 从 `main` 分支提供，入口是 [chen1255.github.io/slide-forge](https://chen1255.github.io/slide-forge/)。里面的两个 HTML 是构建产物，改了版式或 demo spec 后重新生成即可：
+
+```bash
+node bin/slideforge.js build examples/demo.deck.yaml --html docs/demo-16x9.html --pptx out/demo-16x9.pptx
+node bin/slideforge.js build examples/demo.deck.yaml --aspect 4:3 --html docs/demo-4x3.html --pptx out/demo-4x3.pptx
 ```
 
 ---
