@@ -3,48 +3,88 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>slide-forge · 在线演示</title>
+<title>slide-forge · 一份 spec，两种交付</title>
+<meta name="description" content="slide-forge 用一份 YAML 同时生成可编辑的 PPTX 与单文件 HTML 演示，面向中文汇报场景。">
 <style>
-  :root { --ink:#1E2761; --gold:#C9A227; --bg:#F6F7FB; --muted:#5B6472; }
+  :root { --ink:#1E2761; --gold:#C9A227; --bg:#F6F7FB; --muted:#5B6472; --line:#E3E7EF; }
   * { box-sizing: border-box; }
   body { margin:0; font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; background:var(--bg); color:var(--ink); }
-  header { background:var(--ink); color:#fff; padding:56px 24px 48px; text-align:center; }
-  header h1 { margin:0 0 10px; font-size:36px; letter-spacing:.04em; }
-  header p { margin:0; color:#C9CFE4; font-size:15px; }
-  header .bar { width:56px; height:3px; background:var(--gold); margin:20px auto 0; }
-  main { max-width:960px; margin:0 auto; padding:40px 24px 64px; }
+  header { background:var(--ink); color:#fff; padding:64px 24px 56px; text-align:center; }
+  .eyebrow { margin:0 0 18px; font-size:13px; letter-spacing:.18em; color:#9FA8CE; text-transform:uppercase; }
+  header h1 { margin:0 0 14px; font-size:42px; line-height:1.2; letter-spacing:.02em; }
+  header .lead { margin:0 auto; max-width:560px; color:#C9CFE4; font-size:16px; line-height:1.7; }
+  header .bar { width:56px; height:3px; background:var(--gold); margin:26px auto 0; }
+  .facts { display:flex; justify-content:center; flex-wrap:wrap; gap:40px; margin:38px 0 0; padding:0; list-style:none; }
+  .facts li { text-align:center; }
+  .facts b { display:block; font-size:26px; color:var(--gold); font-weight:600; }
+  .facts span { font-size:13px; color:#AEB6D4; }
+  main { max-width:960px; margin:0 auto; padding:44px 24px 16px; }
   .cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; }
   a.card { display:block; background:#fff; border-radius:10px; overflow:hidden; text-decoration:none; color:inherit;
            box-shadow:0 2px 10px rgba(30,39,97,.08); transition:transform .15s, box-shadow .15s; }
   a.card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(30,39,97,.16); }
-  a.card img { display:block; width:100%; height:auto; }
-  .meta { padding:16px 18px 20px; }
+  a.card img { display:block; width:100%; height:auto; border-bottom:1px solid var(--line); }
+  .meta { padding:16px 18px 18px; }
   .meta h2 { margin:0 0 6px; font-size:17px; }
-  .meta span { color:var(--muted); font-size:13px; }
-  footer { text-align:center; color:var(--muted); font-size:13px; padding:0 24px 48px; }
+  .meta p { margin:0; color:var(--muted); font-size:13px; line-height:1.6; }
+  .meta .go { display:inline-block; margin-top:10px; font-size:13px; color:var(--ink); border-bottom:2px solid var(--gold); padding-bottom:2px; }
+  .start { max-width:960px; margin:0 auto; padding:28px 24px 8px; }
+  .start h2 { font-size:15px; margin:0 0 12px; color:var(--muted); font-weight:500; }
+  pre { margin:0; background:var(--ink); color:#E8ECFF; border-radius:8px; padding:16px 18px; overflow:auto;
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size:13px; line-height:1.8; }
+  pre .c { color:#8A93B8; }
+  .links { display:flex; gap:22px; flex-wrap:wrap; margin:26px 0 0; font-size:14px; }
+  .links a { color:var(--ink); text-decoration:none; border-bottom:2px solid var(--gold); padding-bottom:2px; }
+  footer { text-align:center; color:var(--muted); font-size:13px; padding:36px 24px 48px; }
   footer a { color:var(--ink); }
 </style>
 </head>
 <body>
 <header>
-  <h1>slide-forge</h1>
-  <p>一份 YAML spec，同时生成可编辑 PPTX 与单文件 HTML 演示</p>
+  <p class="eyebrow">slide-forge · 幻灯片工坊</p>
+  <h1>一份 spec，两种交付</h1>
+  <p class="lead">同一份 YAML，既产出可在 PowerPoint 里继续编辑的 .pptx，也产出能给直接发链接的单文件 HTML 演示——两种输出共用一套版面模型，不会各说各话。</p>
   <div class="bar"></div>
+  <ul class="facts">
+    <li><b>18</b><span>内置版式</span></li>
+    <li><b>2</b><span>种画布 16:9 / 4:3</span></li>
+    <li><b>0</b><span>运行时依赖，单文件交付</span></li>
+  </ul>
 </header>
 <main>
   <div class="cards">
     <a class="card" href="demo-16x9.html">
-      <img src="images/chart.png" alt="16:9 演示截图">
-      <div class="meta"><h2>16:9 演示（19 页）</h2><span>方向键翻页 · 支持 ?p=8 深链</span></div>
+      <img src="images/chart.png" alt="16:9 演示：图表页与解读">
+      <div class="meta">
+        <h2>16:9 演示 · 19 页</h2>
+        <p>覆盖封面、目录、KPI、卡片、图表、表格、时间线、流程、对比等主要版式，全部由同一份 YAML 生成。</p>
+        <span class="go">打开演示 →</span>
+      </div>
     </a>
     <a class="card" href="demo-4x3.html">
-      <img src="images/chart-4x3.png" alt="4:3 演示截图">
-      <div class="meta"><h2>4:3 演示（19 页）</h2><span>同一份 spec，仅纵向重排</span></div>
+      <img src="images/chart-4x3.png" alt="4:3 演示：同一页在更高画布上的排布">
+      <div class="meta">
+        <h2>4:3 演示 · 19 页</h2>
+        <p>内容与上一版完全相同，只是画布加高、纵向重新分布——适合投影仪与老式会议室设备。</p>
+        <span class="go">打开演示 →</span>
+      </div>
     </a>
   </div>
+  <div class="links">
+    <a href="https://github.com/chen1255/slide-forge">GitHub 源码</a>
+    <a href="https://github.com/chen1255/slide-forge#readme">使用文档</a>
+    <a href="https://github.com/chen1255/slide-forge/blob/main/examples/demo.deck.yaml">示例 YAML</a>
+  </div>
 </main>
+<section class="start">
+  <h2>自己跑一遍</h2>
+  <pre><span class="c"># 全局安装后，任意目录可用</span>
+npm i -g slide-forge
+slideforge build examples/demo.deck.yaml
+<span class="c"># PPTX → out/2026-Q3-经营复盘.pptx   HTML → out/2026-Q3-经营复盘.html</span></pre>
+</section>
 <footer>
-  源码：<a href="https://github.com/chen1255/slide-forge">github.com/chen1255/slide-forge</a>
+  中文排版自动测量与缩字号 · 生成前做越界与溢出校验 · MIT License
 </footer>
 </body>
 </html>
