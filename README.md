@@ -28,7 +28,7 @@ slide-forge 把「内容 + 版式」编译成一份**场景描述**（文字/形
 
 ## 安装
 
-需要 Node.js 18+。
+需要 Node.js 20+。
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
@@ -42,6 +42,13 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```bash
 npm install
 node bin/slideforge.js build examples/demo.deck.yaml
+```
+
+全局安装（装完可直接用 `slideforge` 命令，任意目录可用）：
+
+```bash
+npm i -g slide-forge
+slideforge themes
 ```
 
 ---
@@ -185,6 +192,7 @@ slideforge new "供应链数字化改造" --from examples/sample-report.md -o ou
 
 - 文档的第一个 H1 是整篇标题，只用来取封面标题与副标题，**不进目录、不做章节**；它下面的引言段落单独成「背景」页
 - 其余章节（带 `#` 的标题；文档完全没有 `#` 时也认「一、」「1. 」这类中文序号）各成一章；一章展开 ≥ 2 页时自动插章节隔断页
+- 章节只取**最浅一级**标题：`##` 是章时，其下的 `###` 视为小节，正文与表格并回上一章，不单独进目录、不单独插隔断页
 - 每章第一页带 `speaker notes`，取自该章原文（去掉表格符号、超长截断）；`--no-notes` 可关掉
 - `--author "张三"` 写封面署名，`--slides N` 改页数上限（默认 24）；超限时先砍隔断页，再从尾部截断并保留结尾页
 

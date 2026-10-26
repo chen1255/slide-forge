@@ -213,7 +213,7 @@ function contentSlides(sec, title, points) {
 
 /**
  * 长文档 → 完整 spec：封面 + 目录 + 每章（隔断页 + 内容页）+ 结尾
- * 每页带 speaker notes（原文摘录），--no-notes 可关掉
+ * 章节取最浅一级标题，H3 及以下的正文并回上一章；每页带 speaker notes（--no-notes 可关掉）
  */
 function fromDocument(text, topic, opts = {}) {
   const sections = splitSections(text);
@@ -226,9 +226,27 @@ function fromDocument(text, topic, opts = {}) {
   const chapters = sections.filter(
     (s) => s !== titleSec && (s.title || s.body || s.tables.length)
   );
-  const tocTitles = chapters.map((c, i) => c.title || `第 ${i + 1} 部分`);
 
-  const lead = [titleSec, ...chapters]
+  // 只把最浅一级标题当章节，更深的标题（H3 及以下）并回上一章：
+  // 否则目录里会混进小节，隔断页也会把一章切成好几段
+  const chapterLevel = chapters.reduce(
+    (min, s) => (s.title ? Math.min(min, s.level) : min),
+    Infinity
+  );
+  const outline = [];
+  chapters.forEach((sec) => {
+    if (sec.title && sec.level > chapterLevel && outline.length) {
+      const host = outline[outline.length - 1];
+      host.body = [host.body, sec.body].filter(Boolean).join('\n');
+      host.tables = host.tables.concat(sec.tables);
+      return;
+    }
+    outline.push({ ...sec });
+  });
+
+  const tocTitles = outline.map((c, i) => c.title || `第 ${i + 1} 部分`);
+
+  const lead = [titleSec, ...outline]
     .filter(Boolean)
     .map((c) => sentences(c.body)[0])
     .find(Boolean);
@@ -261,7 +279,7 @@ function fromDocument(text, topic, opts = {}) {
   }
 
   let number = 0;
-  chapters.forEach((sec) => {
+  outline.forEach((sec) => {
     const name = sec.title || '背景';
     const points = keyPoints(sec.body, 6);
     const content = contentSlides(sec, name, points);

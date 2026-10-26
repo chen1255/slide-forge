@@ -195,6 +195,34 @@ test('--no-notes 不生成演讲者备注', () => {
   assert.strictEqual(without.slides.length, withNotes.slides.length);
 });
 
+test('H3 小节并回上一章，不单独进目录', () => {
+  const { fromDocument } = require('../src/outline');
+  const md = [
+    '# 年度报告',
+    '',
+    '总述第一句：全年业务保持稳中有进。',
+    '',
+    '## 一、经营概览',
+    '',
+    '整体营收稳步增长，全年增速保持两位数。',
+    '',
+    '### 分区域表现',
+    '',
+    '华东区域贡献最高，达到四成以上；华南区域增速最快。',
+    '',
+    '## 二、明年计划',
+    '',
+    '继续扩大区域覆盖，并把交付周期缩短到十天以内。',
+  ].join('\n');
+  const raw = fromDocument(md, '年度报告');
+  const toc = raw.slides.find((s) => s.layout === 'toc');
+  assert.deepStrictEqual(toc.items, ['一、经营概览', '二、明年计划'], '目录只有二级标题');
+
+  const text = JSON.stringify(raw.slides);
+  assert.ok(text.includes('华东区域贡献最高'), 'H3 下的正文不能丢');
+  assert.ok(!text.includes('分区域表现'), 'H3 标题不再单独成为章节');
+});
+
 test('PPTX：页数、画布尺寸与文字都落进包里', async () => {
   const spec = loadSpec(DEMO);
   const out = path.join(os.tmpdir(), `slide-forge-pptx-${Date.now()}.pptx`);

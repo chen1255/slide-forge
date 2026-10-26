@@ -13,6 +13,23 @@
   },
   "keywords": ["pptx", "powerpoint", "presentation", "slides", "pptxgenjs", "html-deck"],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chen1255/slide-forge.git"
+  },
+  "homepage": "https://github.com/chen1255/slide-forge#readme",
+  "bugs": { "url": "https://github.com/chen1255/slide-forge/issues" },
+  "engines": { "node": ">=20" },
+  "files": [
+    "bin/",
+    "src/",
+    "scripts/validate.js",
+    "examples/",
+    "install.ps1",
+    "README.md",
+    "LICENSE"
+  ],
+  "prepublishOnly": "npm test",
   "dependencies": {
     "js-yaml": "^4.1.0",
     "jszip": "^3.10.1",
