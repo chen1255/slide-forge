@@ -51,6 +51,7 @@ node bin/slideforge.js build examples/demo.deck.yaml
 | 命令 | 作用 |
 |---|---|
 | `slideforge build <spec>` | 生成 PPTX + HTML；`--no-html` 只出 PPTX |
+| `slideforge build <spec> --aspect 4:3` | 改画布比例（`16:9` 默认 / `4:3`），输出文件名自动加 `-4x3` |
 | `slideforge build <spec> --template brand.pptx` | 套用模板的品牌色与字体 |
 | `slideforge check <spec>` | 校验 spec 与版面（越界、文字溢出），不生成文件 |
 | `slideforge themes` | 列出内置主题 |
@@ -73,6 +74,7 @@ meta:
   author: 张三
   date: 2026-10-26
   language: zh-CN
+  aspect: "16:9"              # 或 "4:3"；命令行 --aspect 可覆盖
 
 theme:
   name: midnight-executive   # 或写 palette / fonts 覆盖
@@ -112,6 +114,28 @@ slides:
 - `notes` 可选，写进 PPTX 演讲者备注
 - 颜色一律写 6 位十六进制、**不带 `#`**
 - YAML 里 `2026-10-26` 会被解析成日期对象，工具已自动转回字符串
+
+---
+
+## 画布比例（16:9 / 4:3）
+
+宽度固定 10in，比例只改高度：**16:9 = 10 × 5.625in，4:3 = 10 × 7.5in**。因此所有横向坐标、列宽、字号不受影响，只有纵向重新分布：
+
+- 标题区固定在顶部，结论条与页脚贴底
+- 正文区（要点、图表、表格行高、卡片、对比面板、图片框）随画布拉高
+- 18 个版式全部按同一套规则适配，`check` 会使用当前画布的边界做越界校验
+- PPTX 分别用 `LAYOUT_16x9` / `LAYOUT_4x3`；HTML 画布 960×540 / 960×720
+
+切换方式二选一：
+
+```bash
+slideforge build my.deck.yaml --aspect 4:3     # 临时切换，输出文件名加 -4x3
+```
+
+```yaml
+meta:
+  aspect: "4:3"                                 # 写进 spec，长期生效
+```
 
 ---
 
@@ -155,7 +179,7 @@ slideforge build my.deck.yaml --template "品牌模板.pptx"
 
 明确的限制：**不克隆母版的版式与占位符**。也就是说，套模板后出来的是「品牌配色 + 你的版式」，不是「原模板的第 3 页长什么样」。要做版式级克隆，需要直接改 `ppt/slides/slideN.xml` 与关系文件，属于单独的进阶通道，当前版本未包含。
 
-另外，内置版式按 16:9 设计；4:3 模板会提示比例差异，但不会强制改变画布。
+另外，模板尺寸会提示比例差异。如果你的 spec 或模板是 4:3，用 `--aspect 4:3` 输出即可；模板本身的比例不会被强制套用。
 
 ---
 
@@ -167,7 +191,7 @@ node bin/slideforge.js check my.deck.yaml
 
 逐页构建场景后检查：
 
-- 元素是否越出 10 × 5.625 in 画布
+- 元素是否越出当前画布（16:9 为 10 × 5.625 in，4:3 为 10 × 7.5 in）
 - 文字按字号与框宽估算的行高，是否超出文本框
 - spec 结构：必填字段、图表 labels/values 数量、表格列数与表头是否一致
 
@@ -199,7 +223,8 @@ scripts/qa-render.ps1  PPTX → PNG 目检
 
 ## 已知边界
 
-- 只支持 16:9 画布；4:3 与其他比例未适配
+- 只支持 16:9 与 4:3 两种画布；竖版、超宽等其他比例未适配
+- 4:3 的纵向适配是「按内容区拉伸」，不重排版式结构：一页内容很少时（如 KPI）下半页仍会留白
 - 模板只迁移配色与字体，不克隆母版版式
 - 图片不会自动下载，需在 spec 里给出本地路径或 URL
 - HTML 输出的字体依赖本机字体（中文默认微软雅黑，缺失时回退系统字体）
@@ -211,6 +236,7 @@ scripts/qa-render.ps1  PPTX → PNG 目检
 **slide-forge** turns one YAML spec into both an editable PowerPoint deck and a self-contained HTML presentation, sharing a single layout model so the two outputs never diverge.
 
 - 18 built-in layouts, 4 themes, Chinese-aware text measurement with automatic font shrinking
+- 16:9 and 4:3 canvases from the same spec (`meta.aspect` or `--aspect 4:3`), with vertical re-flow only
 - Native, editable charts and tables in PPTX; inline SVG charts in HTML
 - Brand extraction from `.pptx` / `.potx` (colors, East-Asian fonts, slide size) — layout cloning is out of scope in this version
 - Spec validation for out-of-bounds elements and text overflow before rendering

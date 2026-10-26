@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { LAYOUTS } = require('./layouts');
+const { geoFor } = require('./kit');
 
 const PX = 96;        // 1 英寸 = 96px
 const PT = 96 / 72;   // 1pt = 1.333px
@@ -285,11 +286,11 @@ function renderElement(el, theme) {
   }
 }
 
-const CSS = `
+const css = (w, h) => `
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:#11141c;height:100%;}
 body{font-family:'Microsoft YaHei',system-ui,-apple-system,Arial,sans-serif;overflow:hidden;}
-#stage{position:absolute;left:50%;top:50%;width:960px;height:540px;transform-origin:center center;}
+#stage{position:absolute;left:50%;top:50%;width:${w}px;height:${h}px;transform-origin:center center;}
 .slide{position:absolute;inset:0;overflow:hidden;display:none;}
 .slide.active{display:block;}
 .slide .el{position:absolute;}
@@ -298,12 +299,12 @@ body{font-family:'Microsoft YaHei',system-ui,-apple-system,Arial,sans-serif;over
 @media print{
   html,body{background:#fff;overflow:visible;height:auto;}
   #bar{display:none;}
-  #stage{position:static;transform:none!important;width:960px;height:auto;}
-  .slide{position:relative;display:block!important;width:960px;height:540px;page-break-after:always;break-after:page;}
+  #stage{position:static;transform:none!important;width:${w}px;height:auto;}
+  .slide{position:relative;display:block!important;width:${w}px;height:${h}px;page-break-after:always;break-after:page;}
 }
 `;
 
-const JS = `
+const js = (w, h) => `
 (function(){
   var slides=[].slice.call(document.querySelectorAll('.slide'));
   var idx=0, counter=document.getElementById('counter');
@@ -313,7 +314,7 @@ const JS = `
     counter.textContent=(idx+1)+' / '+slides.length;
   }
   function fit(){
-    var s=Math.min(window.innerWidth/980, (window.innerHeight-30)/560);
+    var s=Math.min(window.innerWidth/(${w}+20), (window.innerHeight-30)/(${h}+20));
     document.getElementById('stage').style.transform='translate(-50%,-50%) scale('+s+')';
   }
   document.addEventListener('keydown',function(e){
@@ -332,8 +333,11 @@ const JS = `
 
 function renderHtml(spec, outPath) {
   const theme = Object.assign({}, spec.theme, { meta: spec.meta });
+  const geo = spec.geo || geoFor(spec.meta.aspect);
+  const pxW = Math.round(geo.W * PX);
+  const pxH = Math.round(geo.H * PX);
   const slides = spec.slides.map((s) => {
-    const scene = LAYOUTS[s.layout](s, theme);
+    const scene = LAYOUTS[s.layout](s, theme, geo);
     const bg = scene.background && scene.background.color;
     const body = (scene.elements || []).map((el) => renderElement(el, theme)).join('');
     return `<section class="slide" style="background:#${bg || theme.palette.bg}">${body}</section>`;
@@ -346,7 +350,7 @@ function renderHtml(spec, outPath) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title}</title>
-<style>${CSS}</style>
+<style>${css(pxW, pxH)}</style>
 </head>
 <body>
 <div id="stage">
@@ -360,7 +364,7 @@ ${slides}
     <button id="next">下一页</button>
   </span>
 </div>
-<script>${JS}</script>
+<script>${js(pxW, pxH)}</script>
 </body>
 </html>`;
 

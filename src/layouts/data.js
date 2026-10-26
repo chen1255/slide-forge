@@ -1,21 +1,26 @@
 /**
  * 数据类版式：图表 / 表格 / 时间线 / 流程 / 对比
+ * g 为画布规格；16:9 下各坐标与改造前一致
  */
-const { W, M, text, fitFont, measure } = require('../kit');
-const { lightScene, titleBlock, takeawayBar, stackText } = require('./common');
+const { text, fitFont, measure, dy, slack } = require('../kit');
+const { bodyBottom, lightScene, titleBlock, takeawayBar, stackText } = require('./common');
 
-const chart = (s, th) => {
+const chart = (s, th, g) => {
   const p = th.palette;
+  const { W, M, H } = g;
   const scene = lightScene(th);
-  scene.elements.push(...titleBlock(s, th));
+  scene.elements.push(...titleBlock(s, th, g));
 
   const insights = (s.insight || []).filter(Boolean);
   const hasInsight = insights.length > 0;
   const cw = hasInsight ? 6.35 : W - 2 * M;
+  const baseH = hasInsight ? 3.2 : 3.4;
+  const bottom = s.takeaway ? H - 1.025 : H - 0.6;
+  const chH = Math.min(baseH + slack(g) * 0.85, bottom - 1.4);
 
   scene.elements.push({
     type: 'chart',
-    x: M, y: 1.4, w: cw, h: hasInsight ? 3.2 : 3.4,
+    x: M, y: 1.4, w: cw, h: chH,
     chart: s.chart,
   });
 
@@ -28,19 +33,20 @@ const chart = (s, th) => {
       color: p.accent, font: th.fonts.heading,
     }));
     const body = stackText(insights, {
-      x: ix, y: 1.78, w: iw, maxY: 4.55,
+      x: ix, y: 1.78, w: iw, maxY: H - 1.075,
       theme: th, size: 11.5, gap: 0.14, hasBullet: false, color: p.text,
     });
     scene.elements.push(...body.elements);
   }
-  scene.elements.push(...takeawayBar(s, th));
+  scene.elements.push(...takeawayBar(s, th, g));
   return scene;
 };
 
-const table = (s, th) => {
+const table = (s, th, g) => {
   const p = th.palette;
+  const { W, M } = g;
   const scene = lightScene(th);
-  scene.elements.push(...titleBlock(s, th));
+  scene.elements.push(...titleBlock(s, th, g));
 
   const cols = (s.columns || []).map((c) => (typeof c === 'string' ? { label: c } : c));
   const rows = s.rows || [];
@@ -76,30 +82,34 @@ const table = (s, th) => {
     }))
   );
 
+  // 行高按可用高度摊开：16:9 上限 0.6in，画布更高时允许更松的行
+  const avail = bodyBottom(g, !!s.takeaway) - 1.42;
+  const rowCap = 0.6 + slack(g) * 0.35;
   scene.elements.push({
     type: 'table',
     x: M, y: 1.42, w: total,
     columns: finalW,
     rows: [header, ...body],
     fontSize,
-    rowH: Math.min(0.6, Math.max(0.34, 3.2 / (rows.length + 1))),
+    rowH: Math.min(rowCap, Math.max(0.34, avail / (rows.length + 1))),
     headerFill: p.primary,
     border: { color: p.line, width: 0.75 },
   });
-  scene.elements.push(...takeawayBar(s, th));
+  scene.elements.push(...takeawayBar(s, th, g));
   return scene;
 };
 
-const timeline = (s, th) => {
+const timeline = (s, th, g) => {
   const p = th.palette;
+  const { W, M } = g;
   const scene = lightScene(th);
-  scene.elements.push(...titleBlock(s, th));
+  scene.elements.push(...titleBlock(s, th, g));
 
   const items = (s.items || []).slice(0, 5);
   const n = Math.max(1, items.length);
   const gap = 0.18;
   const colW = (W - 2 * M - gap * (n - 1)) / n;
-  const axisY = 2.5;
+  const axisY = dy(g, 2.5, 0.55);
 
   scene.elements.push({
     type: 'line', x1: M + 0.1, y1: axisY, x2: W - M - 0.1, y2: axisY,
@@ -138,16 +148,17 @@ const timeline = (s, th) => {
   return scene;
 };
 
-const process = (s, th) => {
+const process = (s, th, g) => {
   const p = th.palette;
+  const { W, M } = g;
   const scene = lightScene(th);
-  scene.elements.push(...titleBlock(s, th));
+  scene.elements.push(...titleBlock(s, th, g));
 
   const steps = (s.steps || []).slice(0, 4);
   const n = Math.max(1, steps.length);
   const gap = 0.26;
   const colW = (W - 2 * M - gap * (n - 1)) / n;
-  const cy = 1.92;
+  const cy = dy(g, 1.92, 0.6);
 
   scene.elements.push({
     type: 'line', x1: M + colW / 2, y1: cy, x2: W - M - colW / 2, y2: cy,
@@ -184,13 +195,15 @@ const process = (s, th) => {
   return scene;
 };
 
-const compare = (s, th) => {
+const compare = (s, th, g) => {
   const p = th.palette;
+  const { W, M, H } = g;
   const scene = lightScene(th);
-  scene.elements.push(...titleBlock(s, th));
+  scene.elements.push(...titleBlock(s, th, g));
 
   const gap = 0.34;
   const panelW = (W - 2 * M - gap) / 2;
+  const panelH = H - 2.245;
   const sides = [
     { data: s.before, x: M, fill: p.card, headFill: p.line, headColor: p.primary },
     { data: s.after, x: M + panelW + gap, fill: p.card, headFill: p.primary, headColor: p.onDark },
@@ -199,7 +212,7 @@ const compare = (s, th) => {
   sides.forEach(({ data, x, fill, headFill, headColor }) => {
     const d = typeof data === 'string' ? { title: data, items: [] } : data || {};
     scene.elements.push({
-      type: 'rect', x, y: 1.4, w: panelW, h: 3.38,
+      type: 'rect', x, y: 1.4, w: panelW, h: panelH,
       fill, line: null, radius: 0.08,
     });
     scene.elements.push({
@@ -212,7 +225,7 @@ const compare = (s, th) => {
       color: headColor, font: th.fonts.heading,
     }));
     const body = stackText(d.items || [], {
-      x: x + 0.22, y: 2.02, w: panelW - 0.44, maxY: 4.6,
+      x: x + 0.22, y: 2.02, w: panelW - 0.44, maxY: H - 1.025,
       theme: th, size: 12, gap: 0.16, color: p.text,
     });
     scene.elements.push(...body.elements);

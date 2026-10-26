@@ -1,12 +1,40 @@
 /**
  * 版面常量与文本测量工具
- * 单位一律为英寸（10 x 5.625 = 16:9）
+ * 单位一律为英寸；画布宽度固定 10in，比例只改高度：
+ *   16:9 → 10 x 5.625，4:3 → 10 x 7.5
  * 页面里的 pt 与英寸换算：1pt = 1/72 英寸
  */
 
-const W = 10;
-const H = 5.625;
-const M = 0.55; // 左右安全边距，Anthropic 版式规范建议 >= 0.5"
+const ASPECTS = {
+  '16:9': { aspect: '16:9', W: 10, H: 5.625, M: 0.55 },
+  '4:3': { aspect: '4:3', W: 10, H: 7.5, M: 0.55 },
+};
+
+const BASE_H = ASPECTS['16:9'].H;
+
+const W = ASPECTS['16:9'].W;
+const H = ASPECTS['16:9'].H;
+const M = ASPECTS['16:9'].M; // 左右安全边距，Anthropic 版式规范建议 >= 0.5"
+
+/** 按比例取画布规格，兼容 "4x3" 之类的写法 */
+function geoFor(aspect) {
+  const key = String(aspect || '16:9').trim().replace(/[x×]/i, ':');
+  const geo = ASPECTS[key];
+  if (!geo) {
+    throw new Error(`不支持的画布比例 "${aspect}"，可用：${Object.keys(ASPECTS).join(' / ')}`);
+  }
+  return geo;
+}
+
+/** 相对 16:9 多出来的纵向空间：16:9 为 0，4:3 为 1.875in */
+function slack(g) {
+  return g.H - BASE_H;
+}
+
+/** 把 16:9 下的绝对 y 坐标按权重下移，weight=0 不动，=1 完全贴底 */
+function dy(g, y, weight) {
+  return y + slack(g) * weight;
+}
 
 /** 单字符宽度（以 em 为单位），用于估算中文/英文混排的占位 */
 function charEm(ch) {
@@ -120,7 +148,7 @@ function columns(x, y, w, h, count, gap) {
 }
 
 module.exports = {
-  W, H, M,
+  ASPECTS, W, H, M, geoFor, slack, dy,
   measure, lineCount, fits, fitFont,
   text, list, rect, line, image, imagePlaceholder, columns,
 };

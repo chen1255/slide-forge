@@ -70,3 +70,34 @@ test('Markdown 可以拆成 spec 草稿', () => {
   assert.ok(layouts.includes('bullets'));
   assert.strictEqual(layouts[layouts.length - 1], 'end');
 });
+
+test('4:3 画布下同样没有越界与溢出', () => {
+  const { errors, warnings } = validateSpecFile(DEMO, { aspect: '4:3' });
+  assert.deepStrictEqual(errors, []);
+  assert.deepStrictEqual(warnings, []);
+});
+
+test('meta.aspect 决定画布尺寸，未知比例报错', () => {
+  const { normalize } = require('../src/spec');
+  const spec = normalize({ meta: { aspect: '4x3' }, slides: [{ layout: 'end' }] }, 'inline');
+  assert.strictEqual(spec.meta.aspect, '4:3');
+  assert.strictEqual(spec.geo.W, 10);
+  assert.strictEqual(spec.geo.H, 7.5);
+  assert.throws(
+    () => normalize({ meta: { aspect: '21:9' }, slides: [{ layout: 'end' }] }, 'inline'),
+    /画布比例/
+  );
+});
+
+test('4:3 的 HTML 画布是 960 x 720', () => {
+  const { geoFor } = require('../src/kit');
+  const spec = loadSpec(DEMO);
+  spec.geo = geoFor('4:3');
+  spec.meta.aspect = '4:3';
+  const out = path.join(os.tmpdir(), `slide-forge-test-4x3-${Date.now()}.html`);
+  renderHtml(spec, out);
+  const html = fs.readFileSync(out, 'utf8');
+  assert.ok(html.includes('width:960px;height:720px'));
+  assert.strictEqual((html.match(/<section class="slide"/g) || []).length, 19);
+  fs.unlinkSync(out);
+});

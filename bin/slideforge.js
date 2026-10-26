@@ -14,6 +14,12 @@ const { loadSpec } = require('../src/spec');
 const { renderPptx } = require('../src/render-pptx');
 const { validateSpecFile } = require('../scripts/validate');
 const { inspectTemplate, applyTemplate, templateWarnings } = require('../src/template');
+const { geoFor } = require('../src/kit');
+
+/** 在扩展名前插入后缀：out/x.pptx -> out/x-4x3.pptx */
+function addSuffix(file, suffix) {
+  return file.replace(/(\.[^\\/]+)$/, `${suffix}$1`);
+}
 
 function parseArgs(argv) {
   const args = { _: [] };
@@ -47,6 +53,16 @@ async function build(file, args) {
     notes.push(`已套用模板配色${info.fonts.body ? '与字体' : ''}：${path.basename(args.template)}`);
   }
 
+  // 画布比例：命令行覆盖 spec，并给默认文件名加后缀，避免覆盖 16:9 产物
+  if (args.aspect && typeof args.aspect === 'string') {
+    const geo = geoFor(args.aspect);
+    spec.geo = geo;
+    spec.meta.aspect = geo.aspect;
+    const sfx = geo.aspect === '4:3' ? '-4x3' : '-16x9';
+    spec.output.pptx = addSuffix(spec.output.pptx, sfx);
+    spec.output.html = addSuffix(spec.output.html, sfx);
+  }
+
   if (args.pptx && typeof args.pptx === 'string') spec.output.pptx = path.resolve(args.pptx);
   if (args.html && typeof args.html === 'string') spec.output.html = path.resolve(args.html);
 
@@ -72,6 +88,7 @@ async function main() {
       'slideforge <命令>',
       '',
       '  build <spec.yaml>     生成 PPTX 与 HTML（--no-html 只出 PPTX）',
+      '  build ... --aspect    改画布比例：16:9（默认）或 4:3',
       '  build ... --template  套用 .pptx/.potx 的品牌色与字体',
       '  check <spec.yaml>     校验 spec 与版面（越界、文字溢出）',
       '  themes                列出内置主题',
@@ -103,8 +120,10 @@ async function main() {
 
   if (cmd === 'check') {
     if (!target) throw new Error('请给出 spec 文件路径');
-    const { spec, errors, warnings } = validateSpecFile(target);
-    console.log(`检查 ${spec.slides.length} 页，主题 ${spec.theme.name}`);
+    const { spec, errors, warnings } = validateSpecFile(target, { aspect: args.aspect });
+    console.log(
+      `检查 ${spec.slides.length} 页，主题 ${spec.theme.name}，画布 ${spec.meta.aspect}`
+    );
     warnings.forEach((w) => console.log(`  ! ${w}`));
     errors.forEach((e) => console.log(`  x ${e}`));
     if (!errors.length && !warnings.length) console.log('  全部通过');

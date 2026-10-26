@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const { resolveTheme } = require('./theme');
+const { geoFor } = require('./kit');
 const { LAYOUTS } = require('./layouts');
 
 const DEFAULTS = {
@@ -70,6 +71,10 @@ function normalize(rawIn, sourceName) {
   const meta = Object.assign({}, DEFAULTS.meta, raw.meta || {});
   if (!meta.date) meta.date = formatDate(new Date());
 
+  // 画布比例：16:9（默认）或 4:3，也接受 "4x3" 之类写法
+  const geo = geoFor(meta.aspect);
+  meta.aspect = geo.aspect;
+
   const theme = resolveTheme(raw.theme ? { theme: raw.theme } : {});
 
   const out = Object.assign({}, DEFAULTS.output, raw.output || {});
@@ -90,6 +95,7 @@ function normalize(rawIn, sourceName) {
 
   const spec = {
     meta,
+    geo,
     theme,
     output: { dir, pptx, html, speakerNotes: out.speakerNotes !== false },
     slides,

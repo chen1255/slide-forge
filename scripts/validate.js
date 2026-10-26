@@ -3,19 +3,25 @@
  * 用法：node scripts/validate.js examples/demo.deck.yaml
  */
 const path = require('path');
-const { W, H, lineCount } = require('../src/kit');
+const { lineCount } = require('../src/kit');
 const { LAYOUTS } = require('../src/layouts');
 const { loadSpec } = require('../src/spec');
 
 const TOL = 0.02;
 
-function validateSpecFile(file) {
+function validateSpecFile(file, opts = {}) {
   const spec = loadSpec(file);
+  if (opts.aspect) {
+    const { geoFor } = require('../src/kit');
+    spec.geo = geoFor(opts.aspect);
+    spec.meta.aspect = spec.geo.aspect;
+  }
+  const { W, H } = spec.geo;
   const errors = [];
   const warnings = [];
 
   spec.slides.forEach((s) => {
-    const scene = LAYOUTS[s.layout](s, Object.assign({}, spec.theme, { meta: spec.meta }));
+    const scene = LAYOUTS[s.layout](s, Object.assign({}, spec.theme, { meta: spec.meta }), spec.geo);
     (scene.elements || []).forEach((el, i) => {
       if (el.type === 'line') return;
       const label = `第 ${s.index} 页（${s.layout}）#${i + 1} ${el.type}`;
@@ -47,8 +53,10 @@ function validateSpecFile(file) {
 
 if (require.main === module) {
   const file = process.argv[2] || path.join(__dirname, '..', 'examples', 'demo.deck.yaml');
-  const { spec, errors, warnings } = validateSpecFile(file);
-  console.log(`检查 ${spec.slides.length} 页`);
+  const i = process.argv.indexOf('--aspect');
+  const aspect = i > 0 ? process.argv[i + 1] : null;
+  const { spec, errors, warnings } = validateSpecFile(file, { aspect });
+  console.log(`检查 ${spec.slides.length} 页，画布 ${spec.geo.W} × ${spec.geo.H} in（${spec.meta.aspect}）`);
   warnings.forEach((w) => console.log(`  ! ${w}`));
   errors.forEach((e) => console.log(`  x ${e}`));
   if (!errors.length && !warnings.length) console.log('  全部通过');

@@ -1,10 +1,17 @@
 /**
  * 各 layout 共用的页面元素
+ * 所有版式都接收画布规格 g（{ W, H, M }），纵向坐标按 g 计算，横向与 16:9 完全一致
  */
-const { W, M, text, fitFont, lineCount } = require('../kit');
+const { text, fitFont, lineCount } = require('../kit');
+
+/** 内容区下沿：有结论条时让开 0.55in，没有则只留 0.625in 页边 */
+function bodyBottom(g, hasTakeaway) {
+  return g.H - (hasTakeaway ? 1.175 : 0.625);
+}
 
 /** 页面主标题（内容页统一位置与字号阶梯） */
-function titleBlock(s, th) {
+function titleBlock(s, th, g) {
+  const { W, M } = g;
   const value = s.title || s.heading || '';
   const size = fitFont(value, th.sizes.title, W - 2 * M, 0.66);
   return [
@@ -26,18 +33,20 @@ function darkScene(th) {
   return { background: { color: th.palette.bgDark }, elements: [] };
 }
 
-/** 页面底部的一句结论条 */
-function takeawayBar(s, th) {
+/** 页面底部的一句结论条（始终贴底，4:3 下自动下移） */
+function takeawayBar(s, th, g) {
   if (!s.takeaway) return [];
+  const { W, M, H } = g;
+  const y = H - 1.0;
   const size = fitFont(s.takeaway, th.sizes.small, W - 2 * M - 0.5, 0.52);
   return [
     {
       type: 'rect',
-      x: M, y: 4.62, w: W - 2 * M, h: 0.52,
+      x: M, y, w: W - 2 * M, h: 0.52,
       fill: th.palette.card, line: null, radius: 0.06,
     },
     text({
-      x: M + 0.25, y: 4.66, w: W - 2 * M - 0.5, h: 0.44,
+      x: M + 0.25, y: y + 0.04, w: W - 2 * M - 0.5, h: 0.44,
       text: s.takeaway, fontSize: size, bold: true,
       color: th.palette.primary, font: th.fonts.body, valign: 'middle',
     }),
@@ -109,4 +118,4 @@ function stackText(items, o) {
   return { elements: els, endY: y - gap };
 }
 
-module.exports = { titleBlock, lightScene, darkScene, takeawayBar, stackText };
+module.exports = { bodyBottom, titleBlock, lightScene, darkScene, takeawayBar, stackText };

@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const pptxgen = require('pptxgenjs');
 const { LAYOUTS } = require('./layouts');
+const { geoFor } = require('./kit');
 
 const CHART_TYPE = {
   bar: 'bar', column: 'bar', line: 'line', pie: 'pie', doughnut: 'doughnut',
@@ -161,14 +162,15 @@ function drawPlaceholder(slide, el, P, theme) {
 
 function renderPptx(spec, outPath) {
   const theme = Object.assign({}, spec.theme, { meta: spec.meta });
+  const geo = spec.geo || geoFor(spec.meta.aspect);
   const pres = new pptxgen();
   const P = pres; // ShapeType / ChartType 枚举挂在实例上，不在模块上
-  pres.layout = 'LAYOUT_16x9';
+  pres.layout = geo.aspect === '4:3' ? 'LAYOUT_4x3' : 'LAYOUT_16x9';
   pres.author = spec.meta.author || '';
   pres.title = spec.meta.title || '';
 
   spec.slides.forEach((s) => {
-    const scene = LAYOUTS[s.layout](s, theme);
+    const scene = LAYOUTS[s.layout](s, theme, geo);
     const slide = pres.addSlide();
     if (scene.background && scene.background.color) {
       slide.background = { color: scene.background.color };
