@@ -52,6 +52,8 @@ ls "$SKILL_DIR/engine/bin/slideforge.js"
 4. **构建**：`build` 出 PPTX + HTML，需要双画布就跑两次。
 5. **交付**：给出产物绝对路径，说明页数与版式分布；PPTX 建议用 `scripts/qa-render.ps1` 导 PNG 目检一次。
 
+交付时说明这一点：图表是 **OOXML 原生可编辑图表**，在 PowerPoint / WPS 里正常，但部分轻量预览器（含应用内预览面板、在线预览）不渲染，会显示成空白。要确认效果，用 PowerPoint 打开或看同名的 HTML 版。
+
 ```bash
 # 1) 从 Markdown 报告自动拆页（纯本地规则，不调模型）
 node "$SKILL_DIR/engine/bin/slideforge.js" new "供应链数字化改造" --from report.md -o out/doc.deck.yaml
@@ -140,6 +142,7 @@ slides:
 | `第 N 行有 M 列` | 表格行列数不匹配 | 补空串或调整表头 |
 | `check` 报越界 | 内容超出画布 | 拆页、减条目，或换 4:3 画布 |
 | 中文变方块/回退字体 | 本机缺字体 | HTML 依赖本机字体，PPTX 指定 `微软雅黑` 等已装字体 |
+| 预览里图表是空白，PowerPoint 打开正常 | 轻量预览器不渲染 OOXML 原生图表 | 不是文件问题。让用户用 PowerPoint 打开，或直接看 HTML 版 / 导出的 PNG |
 | 套模板后版式没变 | 设计如此 | 只迁移配色与字体，版式级克隆不在范围内 |
 
 ## 参考
