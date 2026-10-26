@@ -19,15 +19,21 @@
     "powerpoint",
     "presentation",
     "slides",
+    "deck",
+    "yaml",
+    "svg",
+    "cli",
     "pptxgenjs",
-    "html-deck"
+    "html-deck",
+    "agent-skill",
+    "charts"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chen1255/slide-forge.git"
   },
-  "homepage": "https://github.com/chen1255/slide-forge#readme",
+  "homepage": "https://chen1255.github.io/slide-forge/",
   "bugs": {
     "url": "https://github.com/chen1255/slide-forge/issues"
   },
@@ -39,6 +45,7 @@
     "src/",
     "skills/",
     "scripts/validate.js",
+    "scripts/qa-render.ps1",
     "examples/",
     "install.ps1",
     "README.md",
@@ -49,5 +56,6 @@
     "js-yaml": "^4.1.0",
     "jszip": "^3.10.1",
     "pptxgenjs": "^3.12.0"
-  }
+  },
+  "author": "chen1255"
 }

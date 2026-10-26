@@ -17,11 +17,11 @@ slideforge build examples/demo.deck.yaml
 
 | 封面 | KPI |
 |---|---|
-| ![封面](docs/images/cover.png) | ![KPI](docs/images/kpi.png) |
+| ![封面](https://raw.githubusercontent.com/chen1255/slide-forge/main/docs/images/cover.png) | ![KPI](https://raw.githubusercontent.com/chen1255/slide-forge/main/docs/images/kpi.png) |
 
 | 图表 + 解读 | 流程页 |
 |---|---|
-| ![图表](docs/images/chart.png) | ![流程](docs/images/process.png) |
+| ![图表](https://raw.githubusercontent.com/chen1255/slide-forge/main/docs/images/chart.png) | ![流程](https://raw.githubusercontent.com/chen1255/slide-forge/main/docs/images/process.png) |
 
 ---
 
@@ -41,25 +41,32 @@ slide-forge 把「内容 + 版式」编译成一份**场景描述**（文字/形
 
 需要 Node.js 20+。
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1
-```
-
-脚本会自动定位 Node（兼容 PATH 里没有的绿色版）、安装依赖、校验并生成示例。
-只装依赖不生成示例：`.\install.ps1 -SkipDemo`。
-
-手动安装：
+零安装试用（不污染全局环境）：
 
 ```bash
-npm install
-node bin/slideforge.js build examples/demo.deck.yaml
+npx slide-forge build deck.yaml
 ```
 
-全局安装（装完可直接用 `slideforge` 命令，任意目录可用）：
+全局安装，之后任意目录可用 `slideforge` 命令：
 
 ```bash
 npm i -g slide-forge
 slideforge themes
+```
+
+从源码（仓库自带一键脚本，会自动定位 Node、安装依赖、校验并生成示例）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+脚本兼容 PATH 里没有的绿色版 Node。只装依赖不生成示例：`.\install.ps1 -SkipDemo`。
+
+手动从源码跑：
+
+```bash
+npm install
+node bin/slideforge.js build examples/demo.deck.yaml
 ```
 
 ---
