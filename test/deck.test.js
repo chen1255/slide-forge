@@ -9,8 +9,23 @@ const { loadSpec, validateSpec } = require('../src/spec');
 const { LAYOUTS } = require('../src/layouts');
 const { validateSpecFile } = require('../scripts/validate');
 const { renderHtml } = require('../src/render-html');
+const { renderPptx } = require('../src/render-pptx');
+const JSZip = require('jszip');
 
 const DEMO = path.join(__dirname, '..', 'examples', 'demo.deck.yaml');
+
+/** 解开 pptx，按内部路径取出 XML 文本 */
+async function readPptx(file) {
+  const zip = await JSZip.loadAsync(fs.readFileSync(file));
+  const names = Object.keys(zip.files);
+  const xml = {};
+  await Promise.all(
+    names
+      .filter((n) => /\.(xml|rels)$/.test(n))
+      .map((n) => zip.file(n).async('string').then((s) => { xml[n] = s; }))
+  );
+  return { zip, names, xml };
+}
 
 test('内置 18 个版式齐全', () => {
   const expected = [
@@ -178,4 +193,61 @@ test('--no-notes 不生成演讲者备注', () => {
   assert.ok(withNotes.slides.some((s) => s.notes));
   assert.ok(without.slides.every((s) => !s.notes && !s.note), '--no-notes 下不应有备注');
   assert.strictEqual(without.slides.length, withNotes.slides.length);
+});
+
+test('PPTX：页数、画布尺寸与文字都落进包里', async () => {
+  const spec = loadSpec(DEMO);
+  const out = path.join(os.tmpdir(), `slide-forge-pptx-${Date.now()}.pptx`);
+  await renderPptx(spec, out);
+  const { names, xml } = await readPptx(out);
+
+  const slides = names.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n));
+  assert.strictEqual(slides.length, spec.slides.length, 'slide XML 数量应与 spec 页数一致');
+  assert.ok(xml['ppt/presentation.xml'].includes('<p:sldSz cx="9144000" cy="5143500"/>'), '16:9 = 10 × 5.625in');
+  assert.ok(slides.map((n) => xml[n]).join('').includes('2026 Q3 经营复盘'), '封面标题应写入 slide XML');
+  fs.unlinkSync(out);
+});
+
+test('PPTX：4:3 画布高度是 7.5in', async () => {
+  const { geoFor } = require('../src/kit');
+  const spec = loadSpec(DEMO);
+  spec.geo = geoFor('4:3');
+  spec.meta.aspect = '4:3';
+  const out = path.join(os.tmpdir(), `slide-forge-pptx-4x3-${Date.now()}.pptx`);
+  await renderPptx(spec, out);
+  const { xml } = await readPptx(out);
+  assert.ok(xml['ppt/presentation.xml'].includes('<p:sldSz cx="9144000" cy="6858000"/>'), '4:3 = 10 × 7.5in');
+  fs.unlinkSync(out);
+});
+
+test('PPTX：饼图带图例与多色扇区，备注写进 notesSlide', async () => {
+  const { normalize } = require('../src/spec');
+  const spec = normalize({
+    meta: { title: '图表自测' },
+    slides: [{
+      layout: 'chart',
+      title: '区域结构',
+      chart: {
+        type: 'pie',
+        labels: ['华东', '华南', '华北'],
+        series: [{ name: '占比', values: [50, 30, 20] }],
+      },
+      notes: '这一页讲区域结构',
+    }],
+  }, 'inline');
+  const out = path.join(os.tmpdir(), `slide-forge-pptx-chart-${Date.now()}.pptx`);
+  await renderPptx(spec, out);
+  const { names, xml } = await readPptx(out);
+
+  const chartName = names.find((n) => /^ppt\/charts\/chart\d+\.xml$/.test(n));
+  assert.ok(chartName, '应生成 chart 部件');
+  const chart = xml[chartName];
+  assert.ok(chart.includes('<c:pieChart>'), '图表类型应为饼图');
+  assert.ok(chart.includes('<c:legend>'), '饼图必须带图例');
+  assert.ok((chart.match(/<c:dPt>/g) || []).length >= 3, '每个扇区应单独配色');
+
+  const noteName = names.find((n) => /^ppt\/notesSlides\/notesSlide\d+\.xml$/.test(n));
+  assert.ok(noteName, '应生成备注页');
+  assert.ok(xml[noteName].includes('这一页讲区域结构'), '备注文字应写入 notesSlide');
+  fs.unlinkSync(out);
 });

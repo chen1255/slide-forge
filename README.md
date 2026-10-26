@@ -238,6 +238,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\qa-render.ps1 -Pptx out\demo.
 
 [.github/workflows/ci.yml](.github/workflows/ci.yml) 在 push 到 `main` 与提 PR 时跑：Node 20 / 22 双版本、`npm ci`、单元测试、两种画布的 `check`、生成 4 个产物并确认非空，最后把 demo 的 PPTX 与 HTML 作为 artifact 上传。
 
+单元测试除了版面校验，还会解包生成的 PPTX 做断言：页数与 spec 一致、`sldSz` 的宽高符合 16:9 / 4:3、封面标题进了 slide XML、饼图带图例与多色扇区、备注写入 notesSlide。这样无需 PowerPoint 也能在 Linux CI 上守住产物结构。
+
 「输出不越界」这个约束因此有了自动化回归门，不必每次靠肉眼复核。
 
 ---
