@@ -64,6 +64,41 @@ slideforge themes
 
 ---
 
+## 作为 WorkBuddy 技能使用
+
+仓库同时是一个 WorkBuddy 技能包。`skills/slide-forge/` 是按技能规范写的 Skill 层：
+
+```
+skills/slide-forge/
+├── SKILL.md                    # 触发条件、标准流程、硬规则、排错表
+├── references/                 # layouts.md / spec.md / ingest.md，按需加载
+└── assets/deck-skeleton.yaml   # 可直接复制的 spec 骨架
+```
+
+打包成自包含技能包（内嵌 `bin`、`src` 与生产依赖，装完离线可用，约 2 MB）：
+
+```bash
+npm run pack:skill
+# → dist/slide-forge/          技能目录
+# → dist/slide-forge.zip       顶层目录为 slide-forge/，可直接导入
+```
+
+装到本机（任选其一）：
+
+```bash
+# 解压到用户级技能目录，所有项目可用
+unzip dist/slide-forge.zip -d ~/.workbuddy/skills/
+
+# Windows
+powershell -c "Expand-Archive dist/slide-forge.zip -DestinationPath $env:USERPROFILE\.workbuddy\skills -Force"
+```
+
+之后在对话里说「用 slide-forge 把这份报告做成 PPT」即可触发。技能内的引擎路径是 `<技能目录>/engine/bin/slideforge.js`，不再依赖仓库根目录。
+
+与内置 PPT 技能的分工：需要**套公司母版版式**、改已有 .pptx、或自由排版时用内置 `workbuddy-pptx`；需要**一份 spec 出双产物、双画布、长文档批量拆页、CI 可回归**时用本技能。
+
+---
+
 ## 命令
 
 | 命令 | 作用 |

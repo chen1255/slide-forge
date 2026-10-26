@@ -9,7 +9,8 @@
     "demo": "node bin/slideforge.js build examples/demo.deck.yaml",
     "check": "node bin/slideforge.js check examples/demo.deck.yaml",
     "test": "node --test test/deck.test.js",
-    "qa": "node scripts/validate.js examples/demo.deck.yaml"
+    "qa": "node scripts/validate.js examples/demo.deck.yaml",
+    "pack:skill": "node scripts/pack-skill.js"
   },
   "keywords": ["pptx", "powerpoint", "presentation", "slides", "pptxgenjs", "html-deck"],
   "license": "MIT",
@@ -23,6 +24,7 @@
   "files": [
     "bin/",
     "src/",
+    "skills/",
     "scripts/validate.js",
     "examples/",
     "install.ps1",

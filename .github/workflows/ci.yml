@@ -46,6 +46,25 @@ jobs:
             ls -lh "$f"
           done
 
+      - name: 校验技能包可打包且引擎自包含
+        run: |
+          npm run pack:skill
+          test -s dist/slide-forge.zip || { echo "技能包为空"; exit 1; }
+          test -f dist/slide-forge/SKILL.md || { echo "缺少 SKILL.md"; exit 1; }
+          # 用内嵌引擎在空目录跑一次，确认不依赖仓库根目录
+          mkdir -p .smoke && cp skills/slide-forge/assets/deck-skeleton.yaml .smoke/deck.yaml
+          node dist/slide-forge/engine/bin/slideforge.js check .smoke/deck.yaml
+          node dist/slide-forge/engine/bin/slideforge.js build .smoke/deck.yaml
+          ls -lh dist/slide-forge.zip
+
+      - name: 上传技能包
+        if: matrix.node == '20'
+        uses: actions/upload-artifact@v7
+        with:
+          name: slide-forge-skill
+          path: dist/slide-forge.zip
+          if-no-files-found: error
+
       - name: 上传 demo 产物
         if: matrix.node == '20'
         uses: actions/upload-artifact@v7

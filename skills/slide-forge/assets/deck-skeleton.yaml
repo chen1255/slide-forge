@@ -1,0 +1,60 @@
+# slide-forge spec 骨架 —— 复制后直接改内容
+# 用法：node engine/bin/slideforge.js check deck.yaml && node engine/bin/slideforge.js build deck.yaml
+
+meta:
+  title: 演示标题
+  subtitle: 一句话说明这份材料要回答什么
+  author: 汇报人
+  date: 2026-01-01
+  language: zh-CN
+  aspect: "16:9"            # 或 "4:3"
+
+theme:
+  name: midnight-executive  # midnight-executive / forest-moss / coral-energy / charcoal-minimal
+
+output:
+  dir: out
+  speakerNotes: true
+
+slides:
+  - layout: cover
+    kicker: 内部汇报
+    title: 演示标题
+    subtitle: 一句话说明这份材料要回答什么
+
+  - layout: toc
+    title: 汇报结构
+    items:
+      - { title: 第一章, note: 这一章要说明什么 }
+      - { title: 第二章, note: 这一章要说明什么 }
+
+  - layout: kpi
+    title: 三个关键数字
+    items:
+      - { value: "—", label: 指标一, note: 口径说明 }
+      - { value: "—", label: 指标二, note: 口径说明 }
+      - { value: "—", label: 指标三, note: 口径说明 }
+    takeaway: 一句话结论。
+
+  - layout: bullets
+    title: 核心结论
+    items:
+      - { text: 结论一 }
+      - { text: 结论二, note: 支撑这条例子的关键证据 }
+    takeaway: 一句话收束。
+
+  - layout: chart
+    title: 趋势
+    chart:
+      type: bar
+      labels: [Q1, Q2, Q3, Q4]
+      series:
+        - { name: 指标, values: [0, 0, 0, 0] }
+    insight:
+      - 数据说明了什么
+      - 下一步指向哪里
+
+  - layout: end
+    title: 谢谢
+    contact:
+      - 汇报人
