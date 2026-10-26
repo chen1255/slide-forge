@@ -120,8 +120,11 @@ slides:
 
 - 颜色写 6 位十六进制且**不带 `#`**。
 - `chart.series[i].values` 的长度必须等于 `chart.labels` 的长度，否则 spec 校验直接失败。
+- `chart.type` 只认 8 个值（`bar` `column` `line` `pie` `doughnut` `area` `scatter` `radar`），缺省为 `bar`；写 `funnel` 之类会报错并列出可用类型。用户要漏斗图、甘特图这类没有的形状时，**主动告知改用 `bar` 或 `process` 近似表达**，不要指望它兜住。
+- **多系列折线图默认不显示逐点数值**（两条线数值接近时标签会重叠），需要时显式写 `chart.showValue: true`。
 - `table.rows` 每一行的长度必须等于 `columns` 的长度。
 - 页数不是越多越好：`bullets` 超过 4 条、`cards` 超过 6 张就拆页，自动缩字号只救小溢出，救不了信息过载。
+- 卡片类版式（`compare` / `twoCol` / `team` / `cards`）的卡片高度是按内容区固定撑满的，**条目少于一屏时会留白**。每栏少于 3 条时补一条 `takeaway` 收底，或换用 `kpi` / `bullets`。
 - 图片不会自动下载，`src` 必须是本地路径或 URL；无图时 `image` 版式画占位框，不会伪造内容。
 - `new --from` 是规则抽取，不做语义纠错：口径混杂的句子会主动放弃出图，每章最多抽一张图，生成后需人工复核。
 - YAML 会把 `2026-10-26` 解析成日期对象，工具已自动转回字符串，无需加引号。
@@ -131,6 +134,7 @@ slides:
 | 现象 | 原因 | 处理 |
 |---|---|---|
 | `未知 layout "xxx"` | 版式名拼错 | 从 `references/layouts.md` 的 18 个枚举里取 |
+| `图表类型 "xxx" 不支持` | `chart.type` 不在 8 个枚举内 | 换成支持的近似形状，并告知用户这不是原形状 |
 | `缺少必填字段` | 该版式的必需键缺失 | 对照 `references/layouts.md` 的必填列补齐 |
 | `values 数量与 labels 不一致` | 图表数据行对不齐 | 逐条 series 补齐或截断到 labels 长度 |
 | `第 N 行有 M 列` | 表格行列数不匹配 | 补空串或调整表头 |

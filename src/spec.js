@@ -90,7 +90,12 @@ function normalize(rawIn, sourceName) {
         `第 ${i + 1} 页使用了未知 layout "${layout}"，可用：${Object.keys(LAYOUTS).join(' / ')}`
       );
     }
-    return Object.assign({}, s, { layout, index: i + 1 });
+    const slide = Object.assign({}, s, { layout, index: i + 1 });
+    // 图表类型缺省为 bar；写成不支持的值则在 validateSpec 里报错，不要静默降级
+    if (slide.chart && typeof slide.chart === 'object' && !slide.chart.type) {
+      slide.chart = Object.assign({}, slide.chart, { type: 'bar' });
+    }
+    return slide;
   });
 
   const spec = {
@@ -110,6 +115,9 @@ function normalize(rawIn, sourceName) {
   }
   return spec;
 }
+
+/** 支持的图表类型，与 render-pptx 的类型映射保持一致 */
+const CHART_TYPES = ['bar', 'column', 'line', 'pie', 'doughnut', 'area', 'scatter', 'radar'];
 
 const REQUIRED = {
   cover: ['title'],
@@ -149,6 +157,11 @@ function validateSpec(spec) {
       const c = s.chart || {};
       if (!c.labels || !c.labels.length) errors.push(`第 ${s.index} 页图表缺少 labels`);
       if (!c.series || !c.series.length) errors.push(`第 ${s.index} 页图表缺少 series`);
+      if (c.type && !CHART_TYPES.includes(String(c.type).toLowerCase())) {
+        errors.push(
+          `第 ${s.index} 页图表类型 "${c.type}" 不支持，可用：${CHART_TYPES.join(' / ')}`
+        );
+      }
       (c.series || []).forEach((ser, i) => {
         if (!ser.values || ser.values.length !== (c.labels || []).length) {
           errors.push(`第 ${s.index} 页图表 series[${i}] 的 values 数量与 labels 不一致`);
@@ -176,5 +189,5 @@ function loadSpec(file) {
 }
 
 module.exports = {
-  DEFAULTS, loadSpec, parseSpec, normalize, validateSpec, slugify, today,
+  DEFAULTS, CHART_TYPES, loadSpec, parseSpec, normalize, validateSpec, slugify, today,
 };

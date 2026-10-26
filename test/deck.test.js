@@ -356,3 +356,86 @@ test('PPTX：饼图带图例与多色扇区，备注写进 notesSlide', async ()
   assert.ok(xml[noteName].includes('这一页讲区域结构'), '备注文字应写入 notesSlide');
   fs.unlinkSync(out);
 });
+
+test('不支持的图表类型直接报错，不静默降级成柱状图', () => {
+  const { normalize } = require('../src/spec');
+  let err = null;
+  try {
+    normalize({
+      meta: { title: '漏斗测试' },
+      slides: [{
+        layout: 'chart',
+        chart: { type: 'funnel', labels: ['曝光', '到店'], series: [{ name: '人数', values: [100, 20] }] },
+      }],
+    }, 'inline');
+  } catch (e) {
+    err = e;
+  }
+  assert.ok(err, 'funnel 应抛错');
+  assert.match(err.message, /图表类型 "funnel" 不支持/);
+  assert.match(err.message, /bar \/ column \/ line/, '报错里应列出可用类型');
+});
+
+test('图表类型缺省时归一为 bar', () => {
+  const { normalize } = require('../src/spec');
+  const spec = normalize({
+    meta: { title: '缺省类型' },
+    slides: [{
+      layout: 'chart',
+      chart: { labels: ['A', 'B'], series: [{ name: 's', values: [1, 2] }] },
+    }],
+  }, 'inline');
+  assert.strictEqual(spec.slides[0].chart.type, 'bar');
+});
+
+test('PPTX：多系列折线默认关掉数值标签，单系列保留', async () => {
+  const { normalize } = require('../src/spec');
+  const build = async (series, tag) => {
+    const spec = normalize({
+      meta: { title: `折线-${tag}` },
+      slides: [{
+        layout: 'chart',
+        title: '折线',
+        chart: { type: 'line', labels: ['a', 'b', 'c'], series },
+      }],
+    }, 'inline');
+    const out = path.join(os.tmpdir(), `slide-forge-line-${tag}-${Date.now()}.pptx`);
+    await renderPptx(spec, out);
+    const { names, xml } = await readPptx(out);
+    const chartName = names.find((n) => /^ppt\/charts\/chart\d+\.xml$/.test(n));
+    fs.unlinkSync(out);
+    return xml[chartName];
+  };
+
+  const multi = await build(
+    [{ name: 'A', values: [-38, -30, -23] }, { name: 'B', values: [-36, -28, -21] }],
+    'multi'
+  );
+  assert.match(multi, /<c:showVal val="0"\/>/, '两条线数值接近时标签会重叠，默认不显示');
+
+  const single = await build([{ name: 'A', values: [-38, -30, -23] }], 'single');
+  assert.match(single, /<c:showVal val="1"\/>/, '单系列折线仍显示数值');
+});
+
+test('多系列折线显式 showValue: true 时仍然标注', async () => {
+  const { normalize } = require('../src/spec');
+  const spec = normalize({
+    meta: { title: '强制标注' },
+    slides: [{
+      layout: 'chart',
+      title: '折线',
+      chart: {
+        type: 'line',
+        showValue: true,
+        labels: ['a', 'b', 'c'],
+        series: [{ name: 'A', values: [1, 2, 3] }, { name: 'B', values: [2, 3, 4] }],
+      },
+    }],
+  }, 'inline');
+  const out = path.join(os.tmpdir(), `slide-forge-line-force-${Date.now()}.pptx`);
+  await renderPptx(spec, out);
+  const { names, xml } = await readPptx(out);
+  const chartName = names.find((n) => /^ppt\/charts\/chart\d+\.xml$/.test(n));
+  assert.match(xml[chartName], /<c:showVal val="1"\/>/);
+  fs.unlinkSync(out);
+});

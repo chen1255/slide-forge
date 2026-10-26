@@ -72,7 +72,7 @@ function drawLine(slide, el, P) {
 
 function drawChart(slide, el, P, theme) {
   const c = el.chart || {};
-  const type = CHART_TYPE[c.type] || 'bar';
+  const type = CHART_TYPE[String(c.type || 'bar').toLowerCase()] || 'bar';
   const data = (c.series || []).map((s, i) => ({
     name: s.name || `系列${i + 1}`,
     labels: c.labels || [],
@@ -112,6 +112,10 @@ function drawChart(slide, el, P, theme) {
     opts.showLegend = c.legend !== false;
     opts.showPercent = true;
     opts.showValue = false;
+  } else if ((type === 'line' || type === 'area') && data.length > 1) {
+    // 多条折线/面积图的逐点数值标签会互相压住（两条线数值接近时完全糊成一团），
+    // 默认关闭；坐标轴 + 图例已经够读，确需标注时显式写 chart.showValue: true
+    opts.showValue = c.showValue === true;
   } else {
     opts.showValue = c.showValue !== false;
   }

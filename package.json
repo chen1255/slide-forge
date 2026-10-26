@@ -1,6 +1,6 @@
 {
   "name": "slide-forge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate editable PPTX and self-contained HTML decks from a single YAML spec",
   "type": "commonjs",
   "main": "src/index.js",
