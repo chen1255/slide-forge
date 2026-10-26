@@ -1,0 +1,172 @@
+meta:
+  title: 2026 Q3 经营复盘
+  subtitle: 增长、效率与下一步
+  author: 张三
+  date: 2026-10-26
+  language: zh-CN
+
+theme:
+  name: midnight-executive
+
+output:
+  dir: out
+  speakerNotes: true
+
+slides:
+  - layout: cover
+    kicker: 内部经营汇报
+    title: 2026 Q3 经营复盘
+    subtitle: 增长、效率与下一步
+    author: 战略与运营部
+    date: 2026-10-26
+
+  - layout: toc
+    title: 本次汇报结构
+    items:
+      - { title: 核心指标, note: 三张关键曲线 } 
+      - { title: 渠道结构, note: 直营与分销的剪刀差 }
+      - { title: 问题归因, note: 增速放缓的三个原因 }
+      - { title: 下一步动作, note: 四季度五个抓手 }
+      - { title: 资源与风险, note: 预算、人力与红线 }
+
+  - layout: section
+    number: "01"
+    title: 核心指标：增长还在，但质量在变
+    note: 先看结果，再看结构，最后看原因
+
+  - layout: kpi
+    title: 三张关键数字
+    items:
+      - { value: "1.83亿", label: 季度营收, note: 环比 +9%，同比 +42.6% }
+      - { value: "42.6%", label: 同比增速, note: 超目标 6.2pt }
+      - { value: "31.4%", label: 毛利率, note: 环比 -1.8pt，需关注 }
+    takeaway: 收入达标，但毛利率连续两个季度下滑，增长质量是当前主要矛盾。
+
+  - layout: bullets
+    title: 三个结论
+    items:
+      - { text: 直营渠道增速见顶，Q3 环比仅 +2% }
+      - { text: 分销渠道起量，但折扣率过高侵蚀毛利, note: 平均折扣 7.2 折，比直营低 1.4 折 }
+      - { text: 新品在华东跑通模型，复制到华南需要 6 周 }
+      - { text: 人效同比提升 11%，但客单价下降 4% }
+    takeaway: 结论一：把直营的“量”换成“质”，把分销的“价”拉回来。
+
+  - layout: twoCol
+    title: 渠道结构：剪刀差在扩大
+    left:
+      - { text: 直营：营收占比 58%，环比 +2% }
+      - { text: 分销：营收占比 42%，环比 +19% }
+      - { text: 直营客单价 1,240 元，分销 860 元 }
+      - { text: 分销退货率 6.8%，高于直营 2.1pt }
+    right:
+      title: 这意味着什么
+      items:
+        - 增长来自低毛利渠道
+        - 直营的获客成本仍在上升
+        - 若不干预，Q4 毛利率可能再降 1pt
+
+  - layout: cards
+    title: 问题归因：三个可干预的变量
+    items:
+      - { tag: 01, title: 渠道结构, body: 分销占比每提升 10pt，毛利率下降约 0.9pt }
+      - { tag: 02, title: 折扣策略, body: 促销从“节点型”变成“常态化”，价格锚点被破坏 }
+      - { tag: 03, title: 新品节奏, body: 华东模型验证完成，但华南供应链备货滞后 3 周 }
+
+  - layout: chart
+    title: 季度营收与毛利率
+    chart:
+      type: bar
+      labels: [Q1, Q2, Q3, Q4E]
+      series:
+        - { name: 营收（千万）, values: [12.4, 16.8, 18.3, 20.5] }
+      title: 营收（千万元）
+    insight:
+      - Q4 预测 2.05 亿，依赖华南复制
+      - 若分销占比不降，毛利承压
+    takeaway: 营收曲线仍在上行，但斜率在放缓。
+
+  - layout: chart
+    title: 渠道占比变化
+    chart:
+      type: pie
+      labels: [直营, 分销, 其他]
+      series:
+        - { name: 占比, values: [58, 42, 0] }
+    insight:
+      - 分销占比一年内从 21% 升至 42%
+      - 结构变化是毛利下滑的主因
+
+  - layout: table
+    title: 各渠道经营对比
+    columns: [渠道, 营收, 环比, 毛利率, 退货率]
+    rows:
+      - [直营, 1.06亿, +2%, 38.2%, 4.7%]
+      - [分销, 7700万, +19%, 21.6%, 6.8%]
+      - [其他, 0, 0, 0, 0]
+    takeaway: 分销的增速是用毛利率换来的，这笔账要在 Q4 算清楚。
+
+  - layout: timeline
+    title: 四季度关键节奏
+    items:
+      - { when: 10 月, title: 折扣回收, body: 取消常态化促销，恢复节点型节奏 }
+      - { when: 11 月, title: 华南复制, body: 华东模型完成本地化，首批 12 家门店 }
+      - { when: 12 月, title: 新品二发, body: 备货前置 3 周，目标售罄率 85% }
+
+  - layout: process
+    title: 五个抓手怎么落地
+    steps:
+      - { title: 定价, body: 建立折扣审批线，超过 8 折需区域负责人签批 }
+      - { title: 渠道, body: 分销分级授权，A 类客户给账期，B 类只给返点 }
+      - { title: 供给, body: 华南前置仓落地，备货周期从 6 周压到 3 周 }
+      - { title: 考核, body: 把毛利率纳入区域 KPI，权重 30% }
+
+  - layout: compare
+    title: 现在的做法 vs 四季度要改成
+    before:
+      title: 现在
+      items:
+        - 促销常态化，价格随节点波动
+        - 分销只看回款，不看结构
+        - 新品备货按历史均值
+        - 区域考核只看营收
+    after:
+      title: Q4 调整后
+      items:
+        - 折扣分级审批，锚定 8 折线
+        - 分销按客户分级授权
+        - 备货按门店动销预测
+        - 毛利率权重提升到 30%
+
+  - layout: quote
+    quote: 增长不是把货压给渠道，而是让每一块钱的收入都留下该留的毛利。
+    attribution: 三季度经营会结论
+
+  - layout: team
+    title: 项目组与分工
+    members:
+      - { name: 张三, role: 项目负责人, bio: 统筹节奏与跨部门协同，对最终结果负责 }
+      - { name: 李四, role: 渠道策略, bio: 负责分销分级与折扣审批机制落地 }
+      - { name: 王五, role: 供应链, bio: 负责华南前置仓与备货周期压缩 }
+      - { name: 赵六, role: 数据与考核, bio: 负责指标体系与区域 KPI 调整 }
+
+  - layout: image
+    title: 华东门店改造效果
+    caption: 图：改造后门店动线，客流停留时长提升 18%
+    alt: 门店照片占位
+
+  - layout: screenshot
+    title: 数据看板改造
+    caption: 图：新版看板把毛利率放在首屏，区域负责人每日可见
+    alt: 看板截图占位
+
+  - layout: hero
+    title: 四季度，把增长的质量拿回来
+    subtitle: 营收目标 2.05 亿，毛利率守住 31%
+
+  - layout: end
+    title: 谢谢观看
+    note: 欢迎就渠道分级与考核权重提出意见
+    contact:
+      - 张三
+      - zhangsan@example.com
+      - 战略与运营部

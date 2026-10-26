@@ -1,0 +1,9 @@
+node_modules/
+out/
+.smoke/
+*.pptx
+*.html
+!examples/*.pptx
+*.png
+!examples/preview.png
+.DS_Store
