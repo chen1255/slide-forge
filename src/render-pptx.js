@@ -107,6 +107,9 @@ function drawChart(slide, el, P, theme) {
 
   if (type === 'bar') opts.barDir = c.horizontal ? 'bar' : 'col';
   if (type === 'pie' || type === 'doughnut') {
+    // 饼图的每个扇区就是类目，必须给多色并显示图例，否则只有百分比看不出是谁
+    opts.chartColors = seriesColors(theme);
+    opts.showLegend = c.legend !== false;
     opts.showPercent = true;
     opts.showValue = false;
   } else {

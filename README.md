@@ -168,6 +168,39 @@ meta:
 
 ---
 
+## 长文档拆页（`new --from`）
+
+把一篇 Markdown / 纯文本报告直接拆成多页 spec，全程本地规则、不调模型：
+
+```bash
+slideforge new "供应链数字化改造" --from examples/sample-report.md -o out/doc.deck.yaml
+# spec → out/doc.deck.yaml
+# 生成 12 页（从 Markdown 拆页（examples/sample-report.md））
+# 版式分布：cover×1 toc×1 bullets×3 section×1 chart×2 process×1 timeline×1 compare×1 end×1
+```
+
+支持的扩展名：`.md` / `.markdown` / `.txt` / `.text`。
+
+拆页规则：
+
+- 文档的第一个 H1 是整篇标题，只用来取封面标题与副标题，**不进目录、不做章节**；它下面的引言段落单独成「背景」页
+- 其余章节（带 `#` 的标题；文档完全没有 `#` 时也认「一、」「1. 」这类中文序号）各成一章；一章展开 ≥ 2 页时自动插章节隔断页
+- 每章第一页带 `speaker notes`，取自该章原文（去掉表格符号、超长截断）
+- 页数上限默认 24，`--slides N` 可调；超限时先砍隔断页，再从尾部截断并保留结尾页
+
+图表数据抽取：
+
+- **Markdown 管道表格**：第一列当类目，任一列全是数值就能出图；类目多为年份 → `line`，百分比合计 ≈ 100% → `pie`，否则 `bar`
+- **正文数值序列**：「华东 34%，华南 26%，华北 21%，西南 12%，其他 7%」这种，要求**同一句内 ≥ 3 个数值对**；跨行拼接时必须单位一致，否则宁可不出图
+- 图表右侧「解读」用该章前 3 条要点，剩下的要点才另起文字页，避免同一句话在相邻两页重复
+
+形态判断（决定用哪种版式）：出现「现状 / 目标」→ `compare`；出现「首先 / 其次 / 然后 / 最后」→ `process`；≥ 3 处日期 → `timeline`；短句列表 → `cards`；其余 `bullets`。
+
+> 这是**规则抽取**，不做语义纠错：口径混杂的句子会被主动放弃出图，图表也只取一个数值列。生成后请按需手工调整。
+
+
+---
+
 ## 套用公司模板
 
 ```bash
@@ -220,7 +253,8 @@ src/layouts/           18 个版式（只产出场景描述）
 src/render-pptx.js     场景 → PPTX
 src/render-html.js     场景 → 单文件 HTML（含内联 SVG 图表）
 src/template.js        模板配色/字体提取
-src/outline.js         主题 / Markdown → spec 草稿
+src/outline.js         主题 / 文档 → spec 草稿（拆页、选版式）
+src/extract.js         文档结构化抽取（切章、表格、数值序列、形态判断）
 scripts/validate.js    版面校验
 scripts/qa-render.ps1  PPTX → PNG 目检
 .github/workflows/ci.yml  CI：测试 + 双画布校验 + 产物构建
@@ -233,6 +267,7 @@ scripts/qa-render.ps1  PPTX → PNG 目检
 - 只支持 16:9 与 4:3 两种画布；竖版、超宽等其他比例未适配
 - 4:3 的纵向适配是「按内容区拉伸」，不重排版式结构：一页内容很少时（如 KPI）下半页仍会留白
 - 模板只迁移配色与字体，不克隆母版版式
+- `new --from` 是纯规则拆页：不做语义改写，一篇文档只抽一张图，口径不统一的数字会主动跳过
 - 图片不会自动下载，需在 spec 里给出本地路径或 URL
 - HTML 输出的字体依赖本机字体（中文默认微软雅黑，缺失时回退系统字体）
 
@@ -245,6 +280,7 @@ scripts/qa-render.ps1  PPTX → PNG 目检
 - 18 built-in layouts, 4 themes, Chinese-aware text measurement with automatic font shrinking
 - 16:9 and 4:3 canvases from the same spec (`meta.aspect` or `--aspect 4:3`), with vertical re-flow only
 - Native, editable charts and tables in PPTX; inline SVG charts in HTML
+- `new --from report.md` splits a long Markdown/text report into a full multi-page spec, extracting chart data from pipe tables and numeric sentences
 - Brand extraction from `.pptx` / `.potx` (colors, East-Asian fonts, slide size) — layout cloning is out of scope in this version
 - Spec validation for out-of-bounds elements and text overflow before rendering
 

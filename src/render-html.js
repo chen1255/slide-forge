@@ -118,7 +118,8 @@ function placeholderEl(el, theme) {
 // ---------- 图表（内联 SVG） ----------
 
 function chartColors(c, theme) {
-  return [theme.palette.primary, theme.palette.accent, theme.palette.secondary, theme.palette.muted];
+  const p = theme.palette;
+  return [p.primary, p.accent, p.secondary, p.muted, p.text, p.line];
 }
 
 function barSvg(c, w, h, theme) {

@@ -101,3 +101,45 @@ test('4:3 的 HTML 画布是 960 x 720', () => {
   assert.strictEqual((html.match(/<section class="slide"/g) || []).length, 19);
   fs.unlinkSync(out);
 });
+
+test('没有 # 标题时，中文序号也能切章', () => {
+  const { splitSections } = require('../src/extract');
+  const secs = splitSections('一、背景\n\n正文一。\n\n二、目标\n\n正文二。\n');
+  assert.deepStrictEqual(secs.map((s) => s.title), ['背景', '目标']);
+  assert.strictEqual(secs[1].body, '正文二。');
+});
+
+test('数值序列：同一句 ≥3 个数值对才出图，跨句汇总值不混入', () => {
+  const { extractSeries } = require('../src/extract');
+  const pie = extractSeries(
+    '区域贡献占比：华东 34%，华南 26%，华北 21%，西南 12%，其他 7%。华东与华南合计贡献 60%，是主要引擎。'
+  );
+  assert.strictEqual(pie.kind, 'pie');
+  assert.deepStrictEqual(pie.labels, ['华东', '华南', '华北', '西南', '其他']);
+  // 单位不一致的散句不能被拼成一张图
+  assert.strictEqual(extractSeries('履约周期 22 天。缺货率 3.1%。人工对账占用 120 小时。'), null);
+});
+
+test('长文档拆页：文档 H1 不进目录，表格与正文各得其所', () => {
+  const { fromDocument } = require('../src/outline');
+  const { normalize, validateSpec } = require('../src/spec');
+  const doc = path.join(__dirname, '..', 'examples', 'sample-report.md');
+  const spec = normalize(fromDocument(fs.readFileSync(doc, 'utf8'), '供应链数字化改造'), 'sample-report.md');
+  assert.deepStrictEqual(validateSpec(spec), []);
+
+  const toc = spec.slides.find((s) => s.layout === 'toc');
+  assert.strictEqual(toc.items.length, 6);
+  assert.ok(toc.items.every((t) => !t.includes('中期报告')), '文档主标题不该出现在目录里');
+
+  const charts = spec.slides.filter((s) => s.layout === 'chart');
+  const line = charts.find((c) => c.chart.type === 'line');
+  assert.deepStrictEqual(line.chart.series[0].values, [1240, 1560, 1890, 1610]);
+
+  const pie = charts.find((c) => c.chart.type === 'pie');
+  assert.deepStrictEqual(pie.chart.labels, ['华东', '华南', '华北', '西南', '其他']);
+  // 只有一页要点时不该再单独开「（续）」页
+  spec.slides.forEach((s) => assert.ok(!String(s.title || '').includes('（续）')));
+
+  // 备注跟正文走
+  assert.ok(spec.slides.some((s) => s.notes && s.notes.includes('营收')));
+});
