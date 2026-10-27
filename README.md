@@ -44,13 +44,13 @@ slide-forge 把「内容 + 版式」编译成一份**场景描述**（文字/形
 零安装试用（不污染全局环境）：
 
 ```bash
-npx slide-forge build deck.yaml
+npx @jackc1234/slide-forge build deck.yaml
 ```
 
 全局安装，之后任意目录可用 `slideforge` 命令：
 
 ```bash
-npm i -g slide-forge
+npm i -g @jackc1234/slide-forge
 slideforge themes
 ```
 

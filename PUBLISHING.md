@@ -15,7 +15,8 @@ npm view slide-forge version              # 404 表示包名可用；有版本�
 ## 二、需要人工确认的三件事
 
 1. **`author` 字段**：当前是 `chen1255`。想改成真实姓名或邮箱，改 `package.json` 后重新提交。
-2. **版本号**：`0.1.2` 会以 `latest` 标签发布，`npx slide-forge` 直接拿到它。首版也可以从 `0.1.0` 开始。
+2. **版本号**：`0.1.2` 会以 `latest` 标签发布，`npx @jackc1234/slide-forge` 直接拿到它。首版也可以从 `0.1.0` 开始。
+3. **包名为什么带 scope**：`slide-forge` 被 npm 拒绝，因为它与已存在的 `slideforge` 归一化后相同（见第六节第一条），只能改用 `@jackc1234/slide-forge`。scoped 包默认 restricted，因此 `package.json` 里固定了 `publishConfig.access: public`。
 3. **README 渲染**：npm 页面会把 README 渲染出来，但**不解析相对路径的图片**。所有图片必须是绝对 URL（当前已用 `raw.githubusercontent.com`）。
 
 ## 三、登录
@@ -52,9 +53,9 @@ git push origin v0.1.2
 ```bash
 # 全新目录，验证包能被真实安装和使用
 mkdir /tmp/verify && cd /tmp/verify && npm init -y
-npm i slide-forge
-npx slide-forge themes
-npx slide-forge build <(curl -s https://raw.githubusercontent.com/chen1255/slide-forge/main/examples/demo.deck.yaml)
+npm i @jackc1234/slide-forge
+npx @jackc1234/slide-forge themes
+npx @jackc1234/slide-forge build <(curl -s https://raw.githubusercontent.com/chen1255/slide-forge/main/examples/demo.deck.yaml)
 ```
 
 再打开 <https://www.npmjs.com/package/slide-forge> 检查：README 的四张截图是否正常显示、命令示例是否可点。
@@ -63,6 +64,8 @@ npx slide-forge build <(curl -s https://raw.githubusercontent.com/chen1255/slide
 
 | 坑 | 说明 |
 |---|---|
+| **`npm view <名>` 返回 404 不等于能用** | npm 有防抢注保护：把 `-` `_` `.` 去掉后若与已有包同名就拒绝。`slide-forge` 因撞上已存在的 `slideforge` 被拒（报 `Package name too similar`），最终改用 scoped。**判断名字可用只能实发一次** |
+| **邮箱未验证时错误信息会误导** | 未验证邮箱的账号发布一律返回 `403 You may not perform that action with these credentials`，看起来像 token 权限问题。验证后重试，才暴露出真实原因（名字相似） |
 | `files` 白名单漏文件 | 只有显式列出的路径会进包。`qa-render.ps1` 曾漏过一轮，导致 `doctor` 提示的脚本在装包后找不到 |
 | 相对路径图片 | npm 页面不渲染，必须绝对 URL |
 | 版本不可复用 | 同一个版本号永远不能重发。发错了只能 `npm unpublish`（72 小时内、且无依赖方可）再升版本重发 |
