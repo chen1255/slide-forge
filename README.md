@@ -1,4 +1,6 @@
-# slide-forge · 幻灯片工坊
+# 做PPT · slide-forge
+
+![做PPT · slide-forge](https://raw.githubusercontent.com/chen1255/slide-forge/main/docs/images/lockup.png)
 
 [![CI](https://github.com/chen1255/slide-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/chen1255/slide-forge/actions/workflows/ci.yml)
 [![在线演示](https://img.shields.io/badge/demo-online-1E2761)](https://chen1255.github.io/slide-forge/)

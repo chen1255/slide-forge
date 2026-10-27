@@ -7,7 +7,8 @@
 | 字段 | 内容 |
 |---|---|
 | 技能标识（name） | `slide-forge` |
-| 显示名 | 幻灯片工坊 · slide-forge |
+| 显示名 | **做PPT** |
+| 副标题 | 幻灯片工坊 · slide-forge |
 | 版本 | `0.1.2` |
 | 许可证 | MIT |
 | 源码仓库 | https://github.com/chen1255/slide-forge |
@@ -15,8 +16,8 @@
 | 上传包 | `dist/slide-forge.zip`（2.1 MB，顶层目录 `slide-forge/`） |
 | 运行依赖 | Node.js ≥ 20（引擎与依赖已内嵌，无需联网安装） |
 | 支持平台 | Windows / macOS / Linux |
-| ⬜ 分类 | 主推 **办公效率**；若无该级，备选「内容创作」「设计与演示」 |
-| ⬜ 图标 | 未提供，建议用「深蓝底 + 金色细线 + 幻灯片叠层」的简洁图标，1024×1024 PNG |
+| 分类 | **办公效率** |
+| 图标 | `docs/images/icon-1024.png`（1024×1024 PNG，`icon.svg` 为矢量母版，`icon-512.png` / `icon-256.png` 备用） |
 
 ## 二、一句话简介
 
@@ -93,7 +94,29 @@ PPT  PPTX  幻灯片  演示文稿  汇报  YAML  Markdown  图表  双画布  �
 
 英文标签：`pptx` `powerpoint` `presentation` `slides` `yaml` `markdown` `charts` `offline`
 
-## 六、截图（3 张 + 备选）
+## 六、图标与文字标识
+
+图标为深蓝底 + 金色细线 + 幻灯片叠层，画面主体是「一张带图表的幻灯片」，在 256px 下仍能辨认。
+
+| 用途 | 路径 | 规格 |
+|---|---|---|
+| 技能市场图标上传 | `docs/images/icon-1024.png` | 1024×1024 PNG，圆角透明底 |
+| 矢量母版 | `docs/images/icon.svg` | 1024 viewBox，可直接改色 |
+| 卡片 / README 内嵌 | `docs/images/icon-512.png` | 512×512 PNG |
+| 列表小图 / favicon | `docs/images/icon-256.png` | 256×256 PNG |
+| 横版图文标识 | `docs/images/lockup.png` | 1072×480，图标 + 「做PPT」+ 分类标签 |
+
+文字标识用字：**做PPT**（`做` 白色、`PPT` 金色 `#E8B04B`），副标题 `幻灯片工坊 · slide-forge`，分类标签 `办公效率`。
+
+重新生成（改配色或文案后跑一次即可）：
+
+```bash
+python scripts/make-icon.py
+```
+
+脚本里几何常量是唯一来源，PNG 与 SVG 由同一套坐标推导，不会出现两版不一致。
+
+## 七、截图（3 张 + 备选）
 
 建议上传顺序：**首图放图表页**，因为它一屏同时展示了「原生图表 + 右侧解读面板 + 底部结论条」，最能说明产品的信息密度控制能力。
 
@@ -118,7 +141,7 @@ C:\Users\ROG魔霸新锐\WorkBuddy\2026-10-26-23-31-52\slide-forge\docs\images\k
 C:\Users\ROG魔霸新锐\WorkBuddy\2026-10-26-23-31-52\slide-forge\docs\images\process.png
 ```
 
-## 七、审核备注（填「其他说明」栏）
+## 八、审核备注（填「其他说明」栏）
 
 ```
 1. 与内置 workbuddy-pptx 的关系：不替代、不抢触发。内置技能负责「套母版版式、改已有 .pptx、自由排版」，本技能负责「一份 spec 出 PPTX + HTML 双产物、双画布、长文档批量拆页、越界校验可进 CI」。SKILL.md 里已写明这条边界，触发描述也做了区分。
@@ -130,7 +153,7 @@ C:\Users\ROG魔霸新锐\WorkBuddy\2026-10-26-23-31-52\slide-forge\docs\images\p
 4. 文件写入：只在用户指定的输出目录（默认 out/）生成 .pptx / .html / .yaml，不改动其他文件。
 ```
 
-## 八、提交前 checklist
+## 九、提交前 checklist
 
 已核验：
 
@@ -141,9 +164,8 @@ C:\Users\ROG魔霸新锐\WorkBuddy\2026-10-26-23-31-52\slide-forge\docs\images\p
 - [x] `description` 不含尖括号
 - [x] 目录结构符合 `SKILL.md` + `references/` + `assets/` + `scripts/`
 - [x] `SKILL.md` 正文约 1400 字（4000 字符），远低于 5k words 上限，细节已下沉到 references
+- [x] 图标 1024×1024 PNG + 横版图文标识（`docs/images/`，脚本可重生成）
+- [x] 分类取「办公效率」
+- [x] 改动已 push 到 `chen1255/slide-forge` 的 main
 
-待你确认：
-
-- [ ] 分类选哪个（主推「办公效率」）
-- [ ] 是否要做一个 1024×1024 图标
-- [ ] 是否把本次改动 push 到 `chen1255/slide-forge` 的 main
+剩下只需在表单里贴一遍：显示名 `做PPT`、一句话简介、触发词、标签、3 张截图、图标 `docs/images/icon-1024.png`。

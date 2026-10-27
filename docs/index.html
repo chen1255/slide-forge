@@ -3,14 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>slide-forge · 一份 spec，两种交付</title>
+<title>做PPT · slide-forge · 一份 spec，两种交付</title>
 <meta name="description" content="slide-forge 用一份 YAML 同时生成可编辑的 PPTX 与单文件 HTML 演示，面向中文汇报场景。">
+<link rel="icon" type="image/png" sizes="256x256" href="images/icon-256.png">
+<link rel="apple-touch-icon" href="images/icon-256.png">
 <style>
   :root { --ink:#1E2761; --gold:#C9A227; --bg:#F6F7FB; --muted:#5B6472; --line:#E3E7EF; }
   * { box-sizing: border-box; }
   body { margin:0; font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; background:var(--bg); color:var(--ink); }
   header { background:var(--ink); color:#fff; padding:64px 24px 56px; text-align:center; }
   .eyebrow { margin:0 0 18px; font-size:13px; letter-spacing:.18em; color:#9FA8CE; text-transform:uppercase; }
+  header .mark { width:88px; height:88px; display:block; margin:0 auto 22px; border-radius:22px; box-shadow:0 10px 28px rgba(0,0,0,.28); }
   header h1 { margin:0 0 14px; font-size:42px; line-height:1.2; letter-spacing:.02em; }
   header .lead { margin:0 auto; max-width:560px; color:#C9CFE4; font-size:16px; line-height:1.7; }
   header .bar { width:56px; height:3px; background:var(--gold); margin:26px auto 0; }
@@ -41,7 +44,8 @@
 </head>
 <body>
 <header>
-  <p class="eyebrow">slide-forge · 幻灯片工坊</p>
+  <img class="mark" src="images/icon-256.png" width="88" height="88" alt="做PPT 图标">
+  <p class="eyebrow">做PPT · slide-forge</p>
   <h1>一份 spec，两种交付</h1>
   <p class="lead">同一份 YAML，既产出可在 PowerPoint 里继续编辑的 .pptx，也产出能给直接发链接的单文件 HTML 演示——两种输出共用一套版面模型，不会各说各话。</p>
   <div class="bar"></div>
