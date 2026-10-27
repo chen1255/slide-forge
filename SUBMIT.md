@@ -175,7 +175,8 @@ C:\Users\ROG魔霸新锐\WorkBuddy\2026-10-26-23-31-52\slide-forge\docs\images\p
 `dist/submit/` 里就是提交时要逐个上传的文件，文件名带序号，不用再挑：
 
 ```
-dist/submit/slide-forge-0.1.2.zip        技能包（2.1 MB，顶层目录 slide-forge/）
+dist/submit/slide-forge-0.1.2.zip        技能包 · 带外层目录（解压后 slide-forge/SKILL.md）
+dist/submit/slide-forge-0.1.2-flat.zip   技能包 · 扁平结构（SKILL.md 直接在包根）
 dist/submit/icon-1024.png                图标 1024×1024
 dist/submit/screenshot-1-chart.png       首图 · 原生图表 + 解读面板 + 结论条
 dist/submit/screenshot-2-kpi.png         第 2 张 · KPI 页
@@ -183,4 +184,6 @@ dist/submit/screenshot-3-process.png     第 3 张 · 流程页
 dist/submit/SUBMIT.md                    本文件副本，边填边复制
 ```
 
-包体已核验：`quick_validate.py` 返回 `Skill is valid!`；解压到空目录后用内嵌引擎 `check` 通过（6 页、11 组配色对比度达标），`build` 产出 6 页 PPTX 与 HTML，全程没有联网装依赖。
+两个包内容完全一致，只是目录层级不同：上传口如果要求「压缩包第一层就是 `SKILL.md`」，用 `-flat`；要求外面裹一层同名目录，用不带后缀的那个。重新生成：`npm run pack:skill && python scripts/make-zips.py`。
+
+包体已核验：`quick_validate.py` 返回 `Skill is valid!`；解压到空目录后用内嵌引擎 `check` 通过（6 页、11 组配色对比度达标），`build` 产出 6 页 PPTX 与 HTML，全程没有联网装依赖。`SKILL.md` frontmatter 字段：`name` / `version` / `display_name` / `description` / `description_en` / `agent_created` / `license`。

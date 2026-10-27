@@ -1,5 +1,7 @@
 ---
 name: slide-forge
+version: 0.1.2
+display_name: 做PPT
 description: |
   用一份 YAML spec 同时生成可编辑 PPTX 与单文件 HTML 演示，并在生成前逐页做越界与文字溢出校验。适用于中文汇报场景下需要「一次产出两种交付物」「16:9 与 4:3 双版本」「把长 Markdown 报告批量拆成多页 Deck」，以及要求产物可被 CI 自动回归的场合。
 description_en: |
