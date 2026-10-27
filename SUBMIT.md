@@ -169,3 +169,18 @@ C:\Users\ROG魔霸新锐\WorkBuddy\2026-10-26-23-31-52\slide-forge\docs\images\p
 - [x] 改动已 push 到 `chen1255/slide-forge` 的 main
 
 剩下只需在表单里贴一遍：显示名 `做PPT`、一句话简介、触发词、标签、3 张截图、图标 `docs/images/icon-1024.png`。
+
+## 十、上传素材（已按表单顺序整理）
+
+`dist/submit/` 里就是提交时要逐个上传的文件，文件名带序号，不用再挑：
+
+```
+dist/submit/slide-forge-0.1.2.zip        技能包（2.1 MB，顶层目录 slide-forge/）
+dist/submit/icon-1024.png                图标 1024×1024
+dist/submit/screenshot-1-chart.png       首图 · 原生图表 + 解读面板 + 结论条
+dist/submit/screenshot-2-kpi.png         第 2 张 · KPI 页
+dist/submit/screenshot-3-process.png     第 3 张 · 流程页
+dist/submit/SUBMIT.md                    本文件副本，边填边复制
+```
+
+包体已核验：`quick_validate.py` 返回 `Skill is valid!`；解压到空目录后用内嵌引擎 `check` 通过（6 页、11 组配色对比度达标），`build` 产出 6 页 PPTX 与 HTML，全程没有联网装依赖。
