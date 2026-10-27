@@ -8,9 +8,10 @@
 |---|---|
 | 技能标识（name） | `slide-forge` |
 | 显示名 | 幻灯片工坊 · slide-forge |
-| 版本 | `0.1.1` |
+| 版本 | `0.1.2` |
 | 许可证 | MIT |
 | 源码仓库 | https://github.com/chen1255/slide-forge |
+| npm 包 | https://www.npmjs.com/package/@jackc1234/slide-forge （`npx @jackc1234/slide-forge` 可直接跑） |
 | 上传包 | `dist/slide-forge.zip`（2.1 MB，顶层目录 `slide-forge/`） |
 | 运行依赖 | Node.js ≥ 20（引擎与依赖已内嵌，无需联网安装） |
 | 支持平台 | Windows / macOS / Linux |
@@ -124,7 +125,7 @@ C:\Users\ROG魔霸新锐\WorkBuddy\2026-10-26-23-31-52\slide-forge\docs\images\p
 
 2. 自包含：技能包内嵌了引擎（bin + src + 生产依赖），解压即可离线运行，不在用户机器上执行 npm install、不写全局目录。
 
-3. 可验证性：仓库 CI 在 Node 20 / 22 双版本跑 26 个单元测试，包含解包 PPTX 后断言页数、sldSz 画布尺寸、封面标题入 slide XML、饼图图例与多色扇区、备注写入 notesSlide、多系列折线默认不标数值、未知图表类型报错；另有两个画布的 check 与四份产物构建。技能包本身也有「在空目录用内嵌引擎跑通」这一步。
+3. 可验证性：仓库 CI 在 Node 20 / 22 双版本跑 38 个单元测试，包含解包 PPTX 后断言页数、sldSz 画布尺寸、封面标题入 slide XML、饼图图例与多色扇区、备注写入 notesSlide、多系列折线默认不标数值、未知图表类型报错、WCAG 对比度判定、SVG 断行与无障碍属性；另有两个画布的 check 与四份产物构建。技能包本身也有「在空目录用内嵌引擎跑通」这一步，npm 包另在全新目录装线上版本验证过。
 
 4. 文件写入：只在用户指定的输出目录（默认 out/）生成 .pptx / .html / .yaml，不改动其他文件。
 ```
