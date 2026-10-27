@@ -13,7 +13,7 @@
 | 许可证 | MIT |
 | 源码仓库 | https://github.com/chen1255/slide-forge |
 | npm 包 | https://www.npmjs.com/package/@jackc1234/slide-forge （`npx @jackc1234/slide-forge` 可直接跑） |
-| 上传包 | `dist/slide-forge.zip`（2.1 MB，顶层目录 `slide-forge/`） |
+| 上传包 | `dist/slide-forge.zip`（0.2 MB，8 个文件，顶层目录 `slide-forge/`） |
 | 运行依赖 | Node.js ≥ 20（引擎与依赖已内嵌，无需联网安装） |
 | 支持平台 | Windows / macOS / Linux |
 | 分类 | **办公效率** |
@@ -146,7 +146,7 @@ C:\Users\ROG魔霸新锐\WorkBuddy\2026-10-26-23-31-52\slide-forge\docs\images\p
 ```
 1. 与内置 workbuddy-pptx 的关系：不替代、不抢触发。内置技能负责「套母版版式、改已有 .pptx、自由排版」，本技能负责「一份 spec 出 PPTX + HTML 双产物、双画布、长文档批量拆页、越界校验可进 CI」。SKILL.md 里已写明这条边界，触发描述也做了区分。
 
-2. 自包含：技能包内嵌了引擎（bin + src + 生产依赖），解压即可离线运行，不在用户机器上执行 npm install、不写全局目录。
+2. 自包含：技能包内的引擎用 esbuild 把 bin + src + 生产依赖压成**单个文件** `engine/bin/slideforge.js`，整个包只有 8 个文件 / 0.2 MB，解压即可离线运行，不在用户机器上执行 npm install、不写全局目录。（早期版本把 node_modules 整个拷进去，415 个文件，会被上传口判「文件数量超出限制」，已修。）
 
 3. 可验证性：仓库 CI 在 Node 20 / 22 双版本跑 38 个单元测试，包含解包 PPTX 后断言页数、sldSz 画布尺寸、封面标题入 slide XML、饼图图例与多色扇区、备注写入 notesSlide、多系列折线默认不标数值、未知图表类型报错、WCAG 对比度判定、SVG 断行与无障碍属性；另有两个画布的 check 与四份产物构建。技能包本身也有「在空目录用内嵌引擎跑通」这一步，npm 包另在全新目录装线上版本验证过。
 
@@ -175,7 +175,7 @@ C:\Users\ROG魔霸新锐\WorkBuddy\2026-10-26-23-31-52\slide-forge\docs\images\p
 `dist/submit/` 里就是提交时要逐个上传的文件，文件名带序号，不用再挑：
 
 ```
-dist/submit/slide-forge-0.1.2.zip        技能包 · 带外层目录（解压后 slide-forge/SKILL.md）
+dist/submit/slide-forge-0.1.2.zip        技能包 · 带外层目录（8 个文件 / 0.2 MB）
 dist/submit/slide-forge-0.1.2-flat.zip   技能包 · 扁平结构（SKILL.md 直接在包根）
 dist/submit/icon-1024.png                图标 1024×1024
 dist/submit/screenshot-1-chart.png       首图 · 原生图表 + 解读面板 + 结论条

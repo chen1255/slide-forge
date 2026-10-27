@@ -8,10 +8,14 @@
  *   dist/slide-forge/          技能目录（SKILL.md + references/ + assets/ + engine/）
  *   dist/slide-forge.zip       提交/分发用的压缩包，顶层目录为 slide-forge/
  *
- * engine/ 内嵌 bin、src 与生产依赖，装到目标机器后无需联网、无需再跑 npm install。
+ * engine/ 只放「一个文件」：用 esbuild 把 bin + src + 生产依赖压成
+ * engine/bin/slideforge.js。早期版本是把 node_modules 整个拷进去，会有 400+ 个文件，
+ * 技能市场的上传口有文件数上限（报「文件数量超出限制」），所以改成单文件内联。
+ * 装到目标机器后依然无需联网、无需 npm install。
  */
 const fs = require('fs');
 const path = require('path');
+const esbuild = require('esbuild');
 const JSZip = require('jszip');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -19,6 +23,9 @@ const SRC_SKILL = path.join(ROOT, 'skills', 'slide-forge');
 const DIST = path.join(ROOT, 'dist');
 const OUT_DIR = path.join(DIST, 'slide-forge');
 const ZIP_PATH = path.join(DIST, 'slide-forge.zip');
+
+// 技能市场对上传包的文件数有上限，超过这个数就报警
+const FILE_BUDGET = 40;
 
 // 只在拷贝技能源目录的「直接子项」时生效；node_modules 内部同名目录（如 pptxgenjs/dist）必须保留
 const SKIP_TOP = new Set(['.git', 'out', 'dist', 'node_modules', '.DS_Store']);
@@ -87,31 +94,40 @@ async function main() {
   // 1. 技能自身的文档与素材
   copyTree(SRC_SKILL, OUT_DIR);
 
-  // 2. 内嵌引擎：bin + src + package.json + 生产依赖
+  // 2. 内嵌引擎：bin + src + 生产依赖压成单文件，不再拷 node_modules
   const ENGINE = path.join(OUT_DIR, 'engine');
-  fs.mkdirSync(ENGINE, { recursive: true });
-  copyTree(path.join(ROOT, "bin"), path.join(ENGINE, "bin"));
-  copyTree(path.join(ROOT, "src"), path.join(ENGINE, "src"));
-  // bin/slideforge.js 依赖 ../scripts/validate，必须一并内嵌
-  fs.mkdirSync(path.join(ENGINE, 'scripts'), { recursive: true });
-  fs.copyFileSync(
-    path.join(ROOT, 'scripts', 'validate.js'),
-    path.join(ENGINE, 'scripts', 'validate.js')
-  );
+  fs.mkdirSync(path.join(ENGINE, 'bin'), { recursive: true });
+  const engineBin = path.join(ENGINE, 'bin', 'slideforge.js');
+  esbuild.buildSync({
+    entryPoints: [path.join(ROOT, 'bin', 'slideforge.js')],
+    outfile: engineBin,
+    bundle: true,
+    platform: 'node',
+    target: 'node20',
+    format: 'cjs',
+    absWorkingDir: ROOT,
+    legalComments: 'none',
+    minify: true,
+    banner: {
+      js: '// slide-forge engine bundle — 由 scripts/pack-skill.js 生成，请勿手改。源码：github.com/chen1255/slide-forge',
+    },
+    logLevel: 'warning',
+  });
   fs.copyFileSync(path.join(ROOT, 'package.json'), path.join(ENGINE, 'package.json'));
   fs.copyFileSync(path.join(ROOT, 'LICENSE'), path.join(ENGINE, 'LICENSE'));
 
-  const rootModules = path.join(ROOT, 'node_modules');
-  if (!fs.existsSync(rootModules)) {
-    console.error('✗ 缺少 node_modules，先执行 npm ci');
-    process.exit(1);
-  }
-  copyTree(rootModules, path.join(ENGINE, "node_modules"));
-
-  // 3. 冒烟：内嵌引擎能不能被 require 起来
-  const engineBin = path.join(ENGINE, 'bin', 'slideforge.js');
+  // 3. 冒烟：单文件引擎确实被压出来了，且能独立跑起来（不依赖任何 node_modules）
   if (!fs.existsSync(engineBin)) {
     console.error('✗ 内嵌引擎缺少 bin/slideforge.js');
+    process.exit(1);
+  }
+  const smoke = require('child_process').spawnSync(
+    process.execPath,
+    [engineBin, 'themes'],
+    { cwd: path.dirname(engineBin), encoding: 'utf8' }
+  );
+  if (smoke.status !== 0) {
+    console.error('✗ 单文件引擎启动失败：\n' + (smoke.stderr || '').slice(0, 800));
     process.exit(1);
   }
 
@@ -120,9 +136,14 @@ async function main() {
   const stats = countFiles(OUT_DIR);
 
   console.log(`✓ 技能目录 ${path.relative(ROOT, OUT_DIR)}`);
-  console.log(`  ${stats.n} 个文件，${kb(stats.bytes)}（含内嵌依赖）`);
+  console.log(`  ${stats.n} 个文件，${kb(stats.bytes)}（引擎已内联为单文件）`);
   console.log(`✓ 压缩包 ${path.relative(ROOT, ZIP_PATH)}   ${kb(size)}`);
-  console.log(`\n下一步：\n  node dist/slide-forge/engine/bin/slideforge.js themes\n  python <skill-creator>/scripts/package_skill.py dist/slide-forge`);
+  if (stats.n > FILE_BUDGET) {
+    console.warn(`! 文件数 ${stats.n} 超过预算 ${FILE_BUDGET}，部分上传口会报「文件数量超出限制」`);
+  } else {
+    console.log(`  文件数在预算内（≤ ${FILE_BUDGET}）`);
+  }
+  console.log(`\n下一步：\n  node dist/slide-forge/engine/bin/slideforge.js themes\n  python scripts/make-zips.py`);
 }
 
 main().catch((e) => {

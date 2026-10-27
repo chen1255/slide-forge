@@ -60,5 +60,8 @@
   "author": "chen1255",
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

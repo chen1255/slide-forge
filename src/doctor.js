@@ -169,7 +169,22 @@ function checkNode() {
   };
 }
 
+/** 单文件内联的引擎包：没有 src/ 与 node_modules，全部压进 bin/slideforge.js */
+function isBundled(root) {
+  return (
+    fs.existsSync(path.join(root, 'bin', 'slideforge.js')) &&
+    !fs.existsSync(path.join(root, 'src', 'index.js'))
+  );
+}
+
 function checkDeps(root) {
+  if (isBundled(root)) {
+    return {
+      ok: true,
+      label: '依赖完整性',
+      detail: '依赖已内联进单文件引擎，无需 node_modules',
+    };
+  }
   const need = ['pptxgenjs', 'jszip', 'js-yaml'];
   const missing = need.filter((m) => {
     try { require.resolve(m, { paths: [root] }); return false; } catch { return true; }
@@ -182,12 +197,18 @@ function checkDeps(root) {
 }
 
 function checkEngine(root) {
-  const files = ['bin/slideforge.js', 'src/index.js', 'src/render-pptx.js', 'scripts/validate.js'];
+  const files = isBundled(root)
+    ? ['bin/slideforge.js']
+    : ['bin/slideforge.js', 'src/index.js', 'src/render-pptx.js', 'scripts/validate.js'];
   const missing = files.filter((f) => !fs.existsSync(path.join(root, f)));
   return {
     ok: missing.length === 0,
     label: '引擎文件',
-    detail: missing.length ? `缺少 ${missing.join(', ')}，技能包不完整` : '核心文件齐全',
+    detail: missing.length
+      ? `缺少 ${missing.join(', ')}，技能包不完整`
+      : isBundled(root)
+        ? '单文件引擎完整'
+        : '核心文件齐全',
   };
 }
 
